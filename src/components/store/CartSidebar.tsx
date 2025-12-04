@@ -35,7 +35,7 @@ export default function CartSidebar() {
             className="flex items-center gap-3 bg-black/20 p-3 rounded-xl"
           >
             <div className="relative h-16 w-16 rounded-lg overflow-hidden">
-              <Image src={item.image} alt={item.name} fill />
+              <Image src={item.img} alt={item.name} fill />
             </div>
 
             <div className="flex-1">

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { PRODUCTS } from "@/data/products";
+import { products } from "@/data/products";
 import { useCartStore } from "@/store/cartStore";
 
 interface ProductPageProps {
@@ -11,7 +11,7 @@ interface ProductPageProps {
 export default function ProductPage({ params }: ProductPageProps) {
   const addItem = useCartStore((state) => state.addItem);
 
-  const product = PRODUCTS.find((p) => p.id === params.slug);
+  const product = products.find((p) => p.id === params.slug);
 
   if (!product) {
     return (
