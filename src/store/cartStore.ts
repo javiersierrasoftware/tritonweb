@@ -1,52 +1,57 @@
+"use client";
+
 import { create } from "zustand";
 
-interface CartItem {
+export interface CartItem {
   id: string;
   name: string;
   price: number;
-  image: string;
   qty: number;
+  img: string; // ✅ NECESARIO PARA ProductCard
 }
 
 interface CartStore {
   items: CartItem[];
-  isOpen: boolean;
-  addItem: (product: CartItem) => void;
-  removeItem: (id: string) => void;
   toggleCart: () => void;
-  clear: () => void;
+  isOpen: boolean;
+  addItem: (item: Omit<CartItem, "qty">) => void;
+  removeItem: (id: string) => void;
+  clearCart: () => void;
 }
 
 export const useCartStore = create<CartStore>((set) => ({
   items: [],
   isOpen: false,
 
-  addItem: (product) =>
-    set((state) => {
-      const exists = state.items.find((p) => p.id === product.id);
+  toggleCart: () =>
+    set((state) => ({ isOpen: !state.isOpen })),
 
-      if (exists) {
+  addItem: (item) =>
+    set((state) => {
+      // si ya existe, aumentar cantidad
+      const existing = state.items.find((i) => i.id === item.id);
+
+      if (existing) {
         return {
-          items: state.items.map((p) =>
-            p.id === product.id ? { ...p, qty: p.qty + 1 } : p
+          items: state.items.map((i) =>
+            i.id === item.id ? { ...i, qty: i.qty + 1 } : i
           ),
         };
       }
 
+      // agregar nuevo
       return {
-        items: [...state.items, { ...product, qty: 1 }],
+        items: [...state.items, { ...item, qty: 1 }],
       };
     }),
 
   removeItem: (id) =>
     set((state) => ({
-      items: state.items.filter((p) => p.id !== id),
+      items: state.items.filter((i) => i.id !== id),
     })),
 
-  toggleCart: () =>
-    set((state) => ({
-      isOpen: !state.isOpen,
+  clearCart: () =>
+    set(() => ({
+      items: [],
     })),
-
-  clear: () => set({ items: [] }),
 }));
