@@ -62,15 +62,15 @@ export default function ProductDetail() {
 
           {/* BOTÓN AGREGAR AL CARRITO */}
           <button
-            onClick={() =>
-              addItem({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.images[0],
-                qty: 1,
-              })
-            }
+  onClick={() =>
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0], // ❌ ERROR
+      qty: 1,
+    })
+  }
             className="bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-bold px-6 py-3 rounded-full text-lg mt-4"
           >
             Agregar al carrito
