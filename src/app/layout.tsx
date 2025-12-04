@@ -2,6 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import CartSidebar from "@/components/store/CartSidebar";
+import Footer from "@/components/Footer";
+
 
 export const metadata: Metadata = {
   title: "TRITONWEB",
@@ -23,6 +25,8 @@ export default function RootLayout({
 
         {/* 🔥 CARRITO GLOBAL: aparece en TODA LA APP */}
         <CartSidebar />
+        <div className="pt-20">{children}</div>
+  <Footer />
       </body>
     </html>
   );
