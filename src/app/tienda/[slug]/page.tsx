@@ -1,29 +1,32 @@
-"use client";
-
 import Image from "next/image";
-import { useParams } from "next/navigation";
-import { products } from "@/data/products";
+import { PRODUCTS } from "@/data/products";
 import { useCartStore } from "@/store/cartStore";
 
-export default function ProductDetail() {
-  const { slug } = useParams();
-  const product = products.find((p) => p.id === slug);
+interface ProductPageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default function ProductPage({ params }: ProductPageProps) {
   const addItem = useCartStore((state) => state.addItem);
+
+  const product = PRODUCTS.find((p) => p.id === params.slug);
 
   if (!product) {
     return (
-      <div className="max-w-5xl mx-auto px-4 pt-28 text-center">
-        <h2 className="text-2xl font-bold text-red-400">Producto no encontrado</h2>
+      <div className="max-w-6xl mx-auto px-4 pt-24">
+        <h1 className="text-2xl font-bold">Producto no encontrado</h1>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-28 pb-20">
-      <div className="grid md:grid-cols-2 gap-10">
+    <div className="max-w-6xl mx-auto px-4 pt-24 pb-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
 
         {/* IMAGEN PRINCIPAL */}
-        <div className="relative w-full h-96 rounded-2xl overflow-hidden border border-white/10">
+        <div className="relative h-96 rounded-xl overflow-hidden border border-white/10">
           <Image
             src={product.images[0]}
             alt={product.name}
@@ -32,59 +35,30 @@ export default function ProductDetail() {
           />
         </div>
 
-        {/* INFO */}
+        {/* INFO DEL PRODUCTO */}
         <div>
-          <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-          <p className="text-2xl text-cyan-300 font-semibold mb-4">
-            ${product.price.toLocaleString("es-CO")}
-          </p>
+          <h1 className="text-3xl font-bold">{product.name}</h1>
+          <p className="text-gray-400 mt-2">{product.description}</p>
 
-          <p className="text-gray-300 leading-relaxed mb-6">
-            {product.description}
+          <p className="text-2xl font-semibold mt-6 text-cyan-300">
+            ${product.price.toLocaleString()}
           </p>
-
-          {/* TALLAS */}
-          {product.sizes.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold mb-2">Tallas disponibles</h3>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <span
-                    key={size}
-                    className="px-3 py-1 rounded-full border border-white/20 hover:bg-white/10 cursor-pointer"
-                  >
-                    {size}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* BOTÓN AGREGAR AL CARRITO */}
           <button
-  onClick={() =>
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.images[0], // ❌ ERROR
-      qty: 1,
-    })
-  }
-            className="bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-bold px-6 py-3 rounded-full text-lg mt-4"
+            onClick={() =>
+              addItem({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                img: product.images[0],  // ✅ PROPIEDAD CORRECTA
+              })
+            }
+            className="bg-gradient-to-br from-cyan-300 to-orange-300 
+                       text-black font-bold px-8 py-3 rounded-full mt-6"
           >
             Agregar al carrito
           </button>
-
-          {/* ESPECIFICACIONES */}
-          <div className="mt-10">
-            <h3 className="font-semibold text-xl mb-3">Especificaciones</h3>
-            <ul className="list-disc ml-6 text-gray-300 space-y-1">
-              {product.specs.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
-          </div>
         </div>
       </div>
     </div>

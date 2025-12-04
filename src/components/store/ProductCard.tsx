@@ -16,7 +16,12 @@ export default function ProductCard({ id, name, price, images }: ProductCardProp
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
-    addItem({ id, name, price, img: images[0] });
+    addItem({ 
+  id: p.id,
+  name: p.name,
+  price: p.price,
+  img: p.images[0],
+});
   };
 
   return (
