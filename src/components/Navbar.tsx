@@ -2,23 +2,51 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, X, ShoppingCart, ChevronDown } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const router = useRouter();
+
   const toggleMobile = () => setMobileOpen(!mobileOpen);
+  const toggleProfileMenu = () => setMenuOpen(!menuOpen);
 
   const toggleCart = useCartStore((state) => state.toggleCart);
   const items = useCartStore((state) => state.items);
   const totalItems = items.reduce((acc, item) => acc + item.qty, 0);
 
+  // 🔥 Leer sesión desde localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) setUser(JSON.parse(stored));
+  }, []);
+
+  // 🔥 LOGOUT REAL
+  const handleLogout = () => {
+    // borrar cookie del token
+    document.cookie = "token=; path=/; max-age=0;";
+
+    // borrar localStorage
+    localStorage.removeItem("user");
+
+    // actualizar navbar
+    setUser(null);
+    window.dispatchEvent(new Event("storage"));
+
+    router.push("/login");
+  };
+
   return (
     <nav className="fixed top-0 left-0 w-full bg-black/60 backdrop-blur-xl border-b border-white/10 z-50">
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
 
-        {/* LOGO + INSTAGRAM */}
+        {/* LOGO */}
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 relative">
             <Image
@@ -31,7 +59,7 @@ export default function Navbar() {
           <span className="text-gray-300 text-sm">@triton_runningclub</span>
         </div>
 
-        {/* DESKTOP MENU */}
+        {/* MENU DESKTOP */}
         <div className="hidden md:flex items-center gap-8 text-sm">
           <NavLinks />
 
@@ -48,19 +76,57 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* LOGIN */}
-          <Link
-            href="/login"
-            className="bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-semibold px-5 py-1.5 rounded-full"
-          >
-            Ingresar
-          </Link>
+          {/* SESIÓN */}
+          {!user ? (
+            <Link
+              href="/login"
+              className="bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-semibold px-5 py-1.5 rounded-full"
+            >
+              Ingresar
+            </Link>
+          ) : (
+            // 🔥 MENÚ DE PERFIL
+            <div className="relative">
+              <button
+                onClick={toggleProfileMenu}
+                className="flex items-center gap-2"
+              >
+                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-bold flex items-center justify-center">
+                  {user.name?.charAt(0).toUpperCase()}
+                </div>
+                <ChevronDown size={18} className="text-gray-300" />
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-[#111] border border-white/10 rounded-xl shadow-lg z-40">
+                  <Link
+                    href="/dashboard"
+                    className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/perfil"
+                    className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Mi Perfil
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-b-xl transition"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* MOBILE ICONS */}
+        {/* ICONOS MOBILE */}
         <div className="flex md:hidden items-center gap-4">
-
-          {/* CARRITO */}
           <button onClick={toggleCart} className="relative">
             <ShoppingCart size={22} className="text-white" />
             {totalItems > 0 && (
@@ -70,7 +136,6 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* HAMBURGER */}
           <button onClick={toggleMobile}>
             {mobileOpen ? (
               <X size={26} className="text-white" />
@@ -81,7 +146,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* MOBILE DRAWER */}
+      {/* DRAWER MOBILE */}
       <div
         className={`fixed top-0 right-0 w-60 h-full bg-[#0d0d0d] border-l border-white/10 shadow-xl transform transition-transform duration-300 z-40 ${
           mobileOpen ? "translate-x-0" : "translate-x-full"
@@ -101,14 +166,27 @@ export default function Navbar() {
           <MobileLink href="/events" onClick={toggleMobile}>Eventos</MobileLink>
           <MobileLink href="/tienda" onClick={toggleMobile}>Tienda</MobileLink>
 
-          {/* BOTÓN UNIRME */}
-          <Link
-            href="/join"
-            onClick={toggleMobile}
-            className="bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-semibold px-4 py-2 rounded-full text-center"
-          >
-            Unirme al Club
-          </Link>
+          {!user ? (
+            <Link
+              href="/join"
+              onClick={toggleMobile}
+              className="bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-semibold px-4 py-2 rounded-full text-center"
+            >
+              Unirme al Club
+            </Link>
+          ) : (
+            <>
+              <MobileLink href="/dashboard" onClick={toggleMobile}>
+                Dashboard
+              </MobileLink>
+              <button
+                onClick={handleLogout}
+                className="text-red-400 text-left"
+              >
+                Cerrar sesión
+              </button>
+            </>
+          )}
         </div>
       </div>
     </nav>
@@ -120,23 +198,15 @@ function NavLinks() {
   return (
     <>
       <Link href="/" className="hover:text-cyan-300 transition">Inicio</Link>
-
-      {/* Comunidaad → ahora lleva a la sección del home */}
-      <Link href="/#comunidad" className="hover:text-cyan-300 transition">
-        Comunidad
-      </Link>
-
-      <Link href="/entrenamiento" className="hover:text-cyan-300 transition">
-        Entrenamiento
-      </Link>
-
+      <Link href="/#comunidad" className="hover:text-cyan-300 transition">Comunidad</Link>
+      <Link href="/entrenamiento" className="hover:text-cyan-300 transition">Entrenamiento</Link>
       <Link href="/events" className="hover:text-cyan-300 transition">Eventos</Link>
       <Link href="/tienda" className="hover:text-cyan-300 transition">Tienda</Link>
     </>
   );
 }
 
-/* LINKS PARA EL MENÚ MÓVIL */
+/* LINKS MENU MOBILE */
 function MobileLink({ href, children, onClick }: any) {
   return (
     <Link
