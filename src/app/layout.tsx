@@ -25,7 +25,6 @@ export default function RootLayout({
 
         {/* 🔥 CARRITO GLOBAL: aparece en TODA LA APP */}
         <CartSidebar />
-        <div className="pt-20">{children}</div>
   <Footer />
       </body>
     </html>
