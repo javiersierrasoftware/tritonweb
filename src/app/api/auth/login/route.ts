@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { getDb } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-const TOKEN_COOKIE = "token"; // nombre estándar (el middleware lo usa)
+const TOKEN_COOKIE = "triton_session_token"; // Cookie nueva y limpia
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { message: "Correo y contraseña son obligatorios." },
+        { message: "Correo y contraseña son obligatorios" },
         { status: 400 }
       );
     }
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const user = await users.findOne({ email });
     if (!user) {
       return NextResponse.json(
-        { message: "Credenciales inválidas." },
+        { message: "Credenciales inválidas" },
         { status: 401 }
       );
     }
@@ -33,46 +33,56 @@ export async function POST(req: Request) {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return NextResponse.json(
-        { message: "Credenciales inválidas." },
+        { message: "Credenciales inválidas" },
         { status: 401 }
       );
     }
 
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw new Error("Debes definir JWT_SECRET en las variables de entorno");
-    }
-
-    // Payload del usuario
+    // Generar JWT
+    const secret = process.env.JWT_SECRET!;
     const payload = {
       sub: (user._id as ObjectId).toString(),
       email: user.email,
       name: user.name,
+      role: user.role ?? "USER", // cuidado aquí
     };
 
-    // Firmar token JWT
     const token = jwt.sign(payload, secret, { expiresIn: "7d" });
 
-    // Respuesta JSON
-    const response = NextResponse.json(
-      {
-        message: "Login exitoso",
-        user: {
-          id: payload.sub,
-          name: user.name,
-          email: user.email,
-        },
+    const response = NextResponse.json({
+      message: "Login exitoso",
+      user: {
+        id: payload.sub,
+        name: user.name,
+        email: user.email,
+        role: user.role ?? "USER",
       },
-      { status: 200 }
-    );
+    }, { status: 200 });
 
-    // Guardar cookie (middleware la usa)
+    // ==================================================
+    //   BORRAR TOKEN ANTERIOR POR SI AÚN EXISTE
+    // ==================================================
+    response.cookies.set("token", "", {
+      path: "/",
+      maxAge: 0,
+    });
+
+    // ==================================================
+    //   COLOCAR COOKIE NUEVA
+    // ==================================================
     response.cookies.set(TOKEN_COOKIE, token, {
-      httpOnly: false, // si quieres usar httpOnly=true también te lo dejo listo
+      httpOnly: true, // más seguro + fuerza a usar esta cookie
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 días
+    });
+
+    // Log para verificar que el rol llega OK
+    console.log("🔵 LOGIN SUCCESS – USER FOUND:", {
+      email: user.email,
+      role: user.role,
+      id: user._id.toString(),
     });
 
     return response;
@@ -80,7 +90,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("Error en login:", err);
     return NextResponse.json(
-      { message: "Error interno al iniciar sesión." },
+      { message: "Error interno al iniciar sesión" },
       { status: 500 }
     );
   }

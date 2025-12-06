@@ -36,14 +36,14 @@ export default function LoginPage() {
       // ================================
       // 🔥 GUARDAR TOKEN Y USER EN LOCALSTORAGE
       // ================================
-      localStorage.setItem("token", data.token);
+      // El token se maneja con una cookie httpOnly, no es necesario guardarlo en localStorage
       localStorage.setItem("user", JSON.stringify(data.user));
 
       // 🔥 Notificar al Navbar que debe actualizarse
       window.dispatchEvent(new Event("storage"));
 
       // 🔥 Redirigir al dashboard
-      router.push("/dashboard");
+      router.push("/perfil");
 
     } catch (err: any) {
       setErrorMsg(err.message || "Error inesperado al iniciar sesión.");

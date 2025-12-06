@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X, ShoppingCart, ChevronDown } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
+  const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const toggleMobile = () => setMobileOpen(!mobileOpen);
@@ -21,24 +22,40 @@ export default function Navbar() {
   const items = useCartStore((state) => state.items);
   const totalItems = items.reduce((acc, item) => acc + item.qty, 0);
 
-  // 🔥 Leer sesión desde localStorage
+  /* ------------------------- LEER SESIÓN ------------------------- */
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) setUser(JSON.parse(stored));
+
+    const syncLogout = () => {
+      const updated = localStorage.getItem("user");
+      setUser(updated ? JSON.parse(updated) : null);
+    };
+
+    window.addEventListener("storage", syncLogout);
+    return () => window.removeEventListener("storage", syncLogout);
   }, []);
 
-  // 🔥 LOGOUT REAL
+  /* ---------------------- CERRAR MENÚ CLICK AFUERA ---------------------- */
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  /* ------------------------- LOGOUT ------------------------- */
   const handleLogout = () => {
-    // borrar cookie del token
     document.cookie = "token=; path=/; max-age=0;";
-
-    // borrar localStorage
     localStorage.removeItem("user");
-
-    // actualizar navbar
     setUser(null);
-    window.dispatchEvent(new Event("storage"));
-
     router.push("/login");
   };
 
@@ -85,8 +102,7 @@ export default function Navbar() {
               Ingresar
             </Link>
           ) : (
-            // 🔥 MENÚ DE PERFIL
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button
                 onClick={toggleProfileMenu}
                 className="flex items-center gap-2"
@@ -98,14 +114,8 @@ export default function Navbar() {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-[#111] border border-white/10 rounded-xl shadow-lg z-40">
-                  <Link
-                    href="/dashboard"
-                    className="block px-4 py-3 text-sm hover:bg-white/10 transition"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
+                <div className="absolute right-0 mt-2 w-48 bg-[#111] border border-white/10 rounded-xl shadow-lg z-40 overflow-hidden">
+
                   <Link
                     href="/perfil"
                     className="block px-4 py-3 text-sm hover:bg-white/10 transition"
@@ -113,9 +123,28 @@ export default function Navbar() {
                   >
                     Mi Perfil
                   </Link>
+
+                  <Link
+                    href="/dashboard"
+                    className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+
+                  {user.role === "ADMIN" && (
+                    <Link
+                      href="/stories/create"
+                      className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Crear historia
+                    </Link>
+                  )}
+
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 rounded-b-xl transition"
+                    className="block w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition"
                   >
                     Cerrar sesión
                   </button>
@@ -161,7 +190,12 @@ export default function Navbar() {
 
         <div className="flex flex-col p-5 space-y-5 text-sm">
           <MobileLink href="/" onClick={toggleMobile}>Inicio</MobileLink>
-          <MobileLink href="/#comunidad" onClick={toggleMobile}>Comunidad</MobileLink>
+
+          {/* 👉 AHORA DIRIGE A /stories */}
+          <MobileLink href="/stories" onClick={toggleMobile}>
+            Comunidad
+          </MobileLink>
+
           <MobileLink href="/entrenamiento" onClick={toggleMobile}>Entrenamiento</MobileLink>
           <MobileLink href="/events" onClick={toggleMobile}>Eventos</MobileLink>
           <MobileLink href="/tienda" onClick={toggleMobile}>Tienda</MobileLink>
@@ -179,6 +213,13 @@ export default function Navbar() {
               <MobileLink href="/dashboard" onClick={toggleMobile}>
                 Dashboard
               </MobileLink>
+
+              {user.role === "ADMIN" && (
+                <MobileLink href="/stories/create" onClick={toggleMobile}>
+                  Crear historia
+                </MobileLink>
+              )}
+
               <button
                 onClick={handleLogout}
                 className="text-red-400 text-left"
@@ -193,20 +234,31 @@ export default function Navbar() {
   );
 }
 
-/* LINKS DESKTOP */
+/* --------------------- LINKS DESKTOP --------------------- */
 function NavLinks() {
   return (
     <>
       <Link href="/" className="hover:text-cyan-300 transition">Inicio</Link>
-      <Link href="/#comunidad" className="hover:text-cyan-300 transition">Comunidad</Link>
-      <Link href="/entrenamiento" className="hover:text-cyan-300 transition">Entrenamiento</Link>
-      <Link href="/events" className="hover:text-cyan-300 transition">Eventos</Link>
-      <Link href="/tienda" className="hover:text-cyan-300 transition">Tienda</Link>
+
+      {/* 👉 AHORA DIRIGE A /stories */}
+      <Link href="/stories" className="hover:text-cyan-300 transition">
+        Comunidad
+      </Link>
+
+      <Link href="/entrenamiento" className="hover:text-cyan-300 transition">
+        Entrenamiento
+      </Link>
+      <Link href="/events" className="hover:text-cyan-300 transition">
+        Eventos
+      </Link>
+      <Link href="/tienda" className="hover:text-cyan-300 transition">
+        Tienda
+      </Link>
     </>
   );
 }
 
-/* LINKS MENU MOBILE */
+/* --------------------- LINK MOBILE --------------------- */
 function MobileLink({ href, children, onClick }: any) {
   return (
     <Link
