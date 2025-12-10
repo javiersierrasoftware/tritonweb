@@ -73,7 +73,7 @@ export default function Navbar() {
               className="object-contain"
             />
           </div>
-          <span className="text-gray-300 text-sm">@triton_runningclub</span>
+          <span className="text-gray-300 text-sm">TRITON running club</span>
         </div>
 
         {/* MENU DESKTOP */}
@@ -113,6 +113,7 @@ export default function Navbar() {
                 <ChevronDown size={18} className="text-gray-300" />
               </button>
 
+              {/* ---------- MENU DESPLEGABLE ---------- */}
               {menuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-[#111] border border-white/10 rounded-xl shadow-lg z-40 overflow-hidden">
 
@@ -132,14 +133,62 @@ export default function Navbar() {
                     Dashboard
                   </Link>
 
+                  {/* ---------- OPCIÓN PARA ADMIN ---------- */}
                   {user.role === "ADMIN" && (
-                    <Link
-                      href="/stories/create"
-                      className="block px-4 py-3 text-sm hover:bg-white/10 transition"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      Crear historia
-                    </Link>
+                    <div className="border-t border-white/10 pt-2 mt-2">
+                      <p className="px-4 pt-1 pb-2 text-xs text-gray-400 font-semibold">Historias</p>
+                      <Link
+                        href="/stories/create"
+                        className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Crear nueva historia
+                      </Link>
+                      <Link
+                        href="/stories/manage"
+                        className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Gestionar historias
+                      </Link>
+                      <p className="px-4 pt-2 pb-2 text-xs text-gray-400 font-semibold">Eventos</p>
+                      <Link
+                        href="/events/create"
+                        className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Crear evento
+                      </Link>
+                      <Link
+                        href="/events/manage"
+                        className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Gestionar eventos
+                      </Link>
+                      <p className="px-4 pt-2 pb-2 text-xs text-gray-400 font-semibold">Tienda</p>
+                      <Link
+                        href="/admin/products/create"
+                        className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Crear nuevo producto
+                      </Link>
+                      <Link
+                        href="/admin/products/manage"
+                        className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Gestionar productos
+                      </Link>
+                      <Link
+                        href="/admin/sales"
+                        className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Ventas realizadas
+                      </Link>
+                    </div>
                   )}
 
                   <button
@@ -190,13 +239,10 @@ export default function Navbar() {
 
         <div className="flex flex-col p-5 space-y-5 text-sm">
           <MobileLink href="/" onClick={toggleMobile}>Inicio</MobileLink>
-
-          {/* 👉 AHORA DIRIGE A /stories */}
-          <MobileLink href="/stories" onClick={toggleMobile}>
-            Comunidad
+          <MobileLink href="/stories" onClick={toggleMobile}>Comunidad</MobileLink>
+          <MobileLink href="/entrenamiento" onClick={toggleMobile}>
+            Entrenamiento
           </MobileLink>
-
-          <MobileLink href="/entrenamiento" onClick={toggleMobile}>Entrenamiento</MobileLink>
           <MobileLink href="/events" onClick={toggleMobile}>Eventos</MobileLink>
           <MobileLink href="/tienda" onClick={toggleMobile}>Tienda</MobileLink>
 
@@ -214,10 +260,32 @@ export default function Navbar() {
                 Dashboard
               </MobileLink>
 
+              {/* ⭐ NUEVO SOLO ADMIN */}
               {user.role === "ADMIN" && (
-                <MobileLink href="/stories/create" onClick={toggleMobile}>
-                  Crear historia
-                </MobileLink>
+                <>
+                  <MobileLink href="/stories/create" onClick={toggleMobile}>
+                    Crear historia
+                  </MobileLink>
+                  <MobileLink href="/stories/manage" onClick={toggleMobile}>
+                    Gestionar historias
+                  </MobileLink>
+
+                  <MobileLink href="/events/create" onClick={toggleMobile}>
+                    Crear evento
+                  </MobileLink>
+                  <MobileLink href="/events/manage" onClick={toggleMobile}>
+                    Gestionar eventos
+                  </MobileLink>
+                  <MobileLink href="/admin/products/create" onClick={toggleMobile}>
+                    Crear producto
+                  </MobileLink>
+                  <MobileLink href="/admin/products/manage" onClick={toggleMobile}>
+                    Gestionar productos
+                  </MobileLink>
+                  <MobileLink href="/admin/sales" onClick={toggleMobile}>
+                    Ventas realizadas
+                  </MobileLink>
+                </>
               )}
 
               <button
@@ -239,21 +307,10 @@ function NavLinks() {
   return (
     <>
       <Link href="/" className="hover:text-cyan-300 transition">Inicio</Link>
-
-      {/* 👉 AHORA DIRIGE A /stories */}
-      <Link href="/stories" className="hover:text-cyan-300 transition">
-        Comunidad
-      </Link>
-
-      <Link href="/entrenamiento" className="hover:text-cyan-300 transition">
-        Entrenamiento
-      </Link>
-      <Link href="/events" className="hover:text-cyan-300 transition">
-        Eventos
-      </Link>
-      <Link href="/tienda" className="hover:text-cyan-300 transition">
-        Tienda
-      </Link>
+      <Link href="/stories" className="hover:text-cyan-300 transition">Comunidad</Link>
+      <Link href="/entrenamiento" className="hover:text-cyan-300 transition">Entrenamiento</Link>
+      <Link href="/events" className="hover:text-cyan-300 transition">Eventos</Link>
+      <Link href="/tienda" className="hover:text-cyan-300 transition">Tienda</Link>
     </>
   );
 }
