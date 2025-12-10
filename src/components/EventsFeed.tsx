@@ -73,7 +73,7 @@ export default function EventsFeed() {
                     <Link href={`/events/${event._id}`} className="text-cyan-400 hover:underline text-sm">
                         Ver detalles
                     </Link>
-                    <Link href={`/events/register/${event._id}`} className="bg-cyan-500 text-black px-4 py-2 rounded-md text-sm font-semibold hover:bg-cyan-400">
+                    <Link href={`/events/register/${event._id}`} className="bg-gradient-to-br from-cyan-300 to-orange-300 text-black px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90">
                         Inscribirme
                     </Link>
                 </div>
