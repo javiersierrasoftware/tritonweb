@@ -54,7 +54,7 @@ export default function Feed() {
                 <div className="p-4 space-y-3">
                     <div className="flex items-center gap-2 text-cyan-400">
                         <Calendar size={24} />
-                        <h3 className="text-lg font-bold">{event.name}</h3>
+                        <h3 className="text-lg font-bold text-white">{event.name}</h3>
                     </div>
                     <p className="text-sm text-gray-300">
                         <span className="font-semibold">Fecha:</span> {formatDate(event.date)}
