@@ -1,5 +1,6 @@
 import HeroSlider from "@/components/HeroSlider";
 import Feed from "@/components/Feed";
+import EventsFeed from "@/components/EventsFeed";
 
 
 export default function Home() {
@@ -14,6 +15,11 @@ export default function Home() {
       {/* FEED: ya tiene max-w-6xl, NO envolver otra vez */}
       <section id="comunidad">
         <Feed />
+      </section>
+
+      {/* EVENTOS TRITON */}
+      <section>
+        <EventsFeed />
       </section>
 
 

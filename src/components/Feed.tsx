@@ -1,20 +1,20 @@
 "use client";
 
-import { Calendar } from "lucide-react";
-import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Feed() {
-  const [events, setEvents] = useState([]);
+  const [stories, setStories] = useState([]);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) setUser(JSON.parse(stored));
 
-    fetch("/api/events?limit=3")
+    fetch("/api/stories?featured=1")
   .then((res) => res.json())
-  .then((data) => setEvents(data))
+  .then((data) => setStories(data))
   .catch(console.error);
   }, []);
 
@@ -28,54 +28,64 @@ export default function Feed() {
             <img src="/tritontransparente.png" className="h-7 w-7" />
 
             <div>
-              <h2 className="text-2xl font-bold">Eventos TRITON</h2>
-              <p className="text-gray-400 text-sm">Próximos eventos</p>
+              <h2 className="text-2xl font-bold">Comunidad TRITON</h2>
+              <p className="text-gray-400 text-sm">Últimas publicaciones</p>
             </div>
           </div>
         </div>
 
         {/* GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {events.map((event: any) => {
+          {stories.map((post: any) => {
+            const userInitial =
+              post.user?.charAt(0).toUpperCase() ?? "U";
 
-            const formatDate = (dateString: string) => {
-                return new Date(dateString).toLocaleDateString("es-CO", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                });
-              };
-            
             return (
               <article
-                key={event._id}
+                key={post._id}
                 className="relative bg-[#111] border border-white/5 rounded-2xl overflow-hidden shadow-md"
               >
-                <div className="p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-cyan-400">
-                        <Calendar size={24} />
-                        <h3 className="text-lg font-bold text-white">{event.name}</h3>
-                    </div>
-                    <p className="text-sm text-gray-300">
-                        <span className="font-semibold">Fecha:</span> {formatDate(event.date)}
-                    </p>
-                    <p className="text-sm text-gray-300">
-                        <span className="font-semibold">Hora:</span> {event.time}
-                    </p>
-                    <p className="text-sm text-gray-300">
-                        <span className="font-semibold">Lugar:</span> {event.location}
-                    </p>
-                    <p className="text-lg font-bold text-white">
-                        {event.price === 0 ? "Gratis" : `$${event.price?.toLocaleString('es-CO')}`}
-                    </p>
+                {/* IMAGEN NORMALIZADA */}
+                <div className="relative w-full h-80 bg-black rounded-t-2xl overflow-hidden">
+                  <Image
+                    src={post.image}
+                    alt="post"
+                    fill
+                    className="object-cover object-center"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
                 </div>
-                <div className="p-4 border-t border-white/10 flex justify-between items-center">
-                    <Link href={`/events/${event._id}`} className="text-cyan-400 hover:underline text-sm">
-                        Ver detalles
-                    </Link>
-                    <Link href={`/events/register/${event._id}`} className="bg-cyan-500 text-black px-4 py-2 rounded-md text-sm font-semibold hover:bg-cyan-400">
-                        Inscribirme
-                    </Link>
+
+                {/* USER INFO */}
+                <div className="flex justify-between items-center px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br 
+                                    from-cyan-300/80 to-orange-300/80
+                                    flex items-center justify-center 
+                                    text-black font-bold border border-white/20 shadow-sm">
+                      {userInitial}
+                    </div>
+
+                    <div className="flex flex-col leading-tight">
+                      <p className="font-semibold text-white text-base">
+                        {post.user}
+                      </p>
+                      <span className="text-xs text-gray-400">@{post.userTag}</span>
+                    </div>
+                  </div>
+
+                  <span className="px-3 py-1 text-xs rounded-full 
+                                   bg-white/10 border border-white/10 
+                                   backdrop-blur-sm text-gray-200">
+                    {post.category}
+                  </span>
+                </div>
+
+                {/* DESCRIPTION */}
+                <div className="px-4 pb-4">
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    {post.description}
+                  </p>
                 </div>
               </article>
             );
