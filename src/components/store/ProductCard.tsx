@@ -5,33 +5,33 @@ import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 
 interface ProductCardProps {
-  id: string;
+  _id: string; // Changed id to _id to match mongoose model
   name: string;
   price: number;
-  images: string[];
+  image?: string; // Expect a single optional image string
 }
 
-export default function ProductCard({ id, name, price, images }: ProductCardProps) {
+export default function ProductCard({ _id, name, price, image }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     addItem({
-      id,
+      productId: _id, // Use _id from props as productId
       name,
       price,
-      img: images[0],
+      image: image || "/placeholder-image.jpg", // Use single image with fallback
     });
   };
 
   return (
     <Link
-      href={`/tienda/${id}`}
+      href={`/tienda/${_id}`} // Use _id for the link
       className="bg-[#111] border border-white/5 rounded-2xl overflow-hidden hover:scale-[1.01] transition block"
     >
       <div className="relative w-full h-56">
         <Image
-          src={images[0]}
+          src={image || "/placeholder-image.jpg"} // Use single image with fallback
           alt={name}
           fill
           className="object-cover"

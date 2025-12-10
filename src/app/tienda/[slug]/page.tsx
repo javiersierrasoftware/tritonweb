@@ -1,6 +1,19 @@
 import Image from "next/image";
-import { products } from "@/data/products";
-import { useCartStore } from "@/store/cartStore";
+import { connectDB } from "@/lib/mongodb";
+import Product from "@/models/Product";
+import { notFound } from "next/navigation";
+import AddToCartButton from "@/components/store/AddToCartButton";
+
+// Define the shape of product data directly from the MongoDB model
+interface ProductData {
+  _id: string;
+  name: string;
+  description?: string;
+  price: number;
+  image?: string;
+  slug: string;
+  stock: number;
+}
 
 interface ProductPageProps {
   params: {
@@ -8,17 +21,29 @@ interface ProductPageProps {
   };
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const addItem = useCartStore((state) => state.addItem);
+// Fetch product data on the server
+async function getProduct(slug: string): Promise<ProductData | null> {
+  await connectDB();
+  const product = await Product.findOne({ slug }).lean(); // Use lean() for plain JS objects
+  if (!product) {
+    return null;
+  }
+  // Convert _id to string for serialization if needed on client,
+  // though mongoose.lean() usually handles this for _id to be an ObjectId itself.
+  // For client-side usage, better ensure it's a string.
+  return {
+    ...product,
+    _id: product._id.toString(),
+  } as ProductData;
+}
 
-  const product = products.find((p) => p.id === params.slug);
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  // Fetch product data on the server
+  const product = await getProduct(params.slug);
 
   if (!product) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 pt-24">
-        <h1 className="text-2xl font-bold">Producto no encontrado</h1>
-      </div>
-    );
+    notFound(); // Next.js built-in notFound function
   }
 
   return (
@@ -28,7 +53,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         {/* IMAGEN PRINCIPAL */}
         <div className="relative h-96 rounded-xl overflow-hidden border border-white/10">
           <Image
-            src={product.images[0]}
+            src={product.image || "/placeholder-image.jpg"} // Use product.image
             alt={product.name}
             fill
             className="object-cover"
@@ -45,20 +70,12 @@ export default function ProductPage({ params }: ProductPageProps) {
           </p>
 
           {/* BOTÓN AGREGAR AL CARRITO */}
-          <button
-            onClick={() =>
-              addItem({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                img: product.images[0],  // ✅ PROPIEDAD CORRECTA
-              })
-            }
-            className="bg-gradient-to-br from-cyan-300 to-orange-300 
-                       text-black font-bold px-8 py-3 rounded-full mt-6"
-          >
-            Agregar al carrito
-          </button>
+          <AddToCartButton
+            productId={product._id}
+            name={product.name}
+            price={product.price}
+            image={product.image}
+          />
         </div>
       </div>
     </div>

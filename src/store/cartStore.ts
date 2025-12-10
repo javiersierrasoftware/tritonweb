@@ -3,11 +3,11 @@
 import { create } from "zustand";
 
 export interface CartItem {
-  id: string;
+  productId: string;
   name: string;
   price: number;
   qty: number;
-  img: string; // ✅ NECESARIO PARA ProductCard
+  image?: string; // Changed from 'img' to 'image'
 }
 
 interface CartStore {
@@ -15,7 +15,7 @@ interface CartStore {
   toggleCart: () => void;
   isOpen: boolean;
   addItem: (item: Omit<CartItem, "qty">) => void;
-  removeItem: (id: string) => void;
+  removeItem: (productId: string) => void; // Changed from 'id' to 'productId'
   clearCart: () => void;
 }
 
@@ -29,12 +29,12 @@ export const useCartStore = create<CartStore>((set) => ({
   addItem: (item) =>
     set((state) => {
       // si ya existe, aumentar cantidad
-      const existing = state.items.find((i) => i.id === item.id);
+      const existing = state.items.find((i) => i.productId === item.productId); // Changed from 'id' to 'productId'
 
       if (existing) {
         return {
           items: state.items.map((i) =>
-            i.id === item.id ? { ...i, qty: i.qty + 1 } : i
+            i.productId === item.productId ? { ...i, qty: i.qty + 1 } : i // Changed from 'id' to 'productId'
           ),
         };
       }
@@ -45,9 +45,9 @@ export const useCartStore = create<CartStore>((set) => ({
       };
     }),
 
-  removeItem: (id) =>
+  removeItem: (productId) => // Changed from 'id' to 'productId'
     set((state) => ({
-      items: state.items.filter((i) => i.id !== id),
+      items: state.items.filter((i) => i.productId !== productId), // Changed from 'id' to 'productId'
     })),
 
   clearCart: () =>

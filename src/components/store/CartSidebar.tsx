@@ -3,11 +3,18 @@
 import { useCartStore } from "@/store/cartStore";
 import { X } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react"; // Added useState
+import CheckoutForm from "@/components/store/CheckoutForm"; // Added CheckoutForm
 
 export default function CartSidebar() {
   const { isOpen, items, toggleCart, removeItem } = useCartStore();
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false); // Added state
 
   const total = items.reduce((acc, p) => acc + p.price * p.qty, 0);
+
+  if (showCheckoutForm) {
+    return <CheckoutForm onClose={() => setShowCheckoutForm(false)} totalAmount={total} />;
+  }
 
   return (
     <div
@@ -31,11 +38,11 @@ export default function CartSidebar() {
 
         {items.map((item) => (
           <div
-            key={item.id}
+            key={item.productId}
             className="flex items-center gap-3 bg-black/20 p-3 rounded-xl"
           >
             <div className="relative h-16 w-16 rounded-lg overflow-hidden">
-              <Image src={item.img} alt={item.name} fill />
+              <Image src={item.image || "/placeholder-image.jpg"} alt={item.name} fill />
             </div>
 
             <div className="flex-1">
@@ -45,7 +52,7 @@ export default function CartSidebar() {
               </p>
             </div>
 
-            <button onClick={() => removeItem(item.id)}>
+            <button onClick={() => removeItem(item.productId)}>
               <X size={18} className="text-red-400" />
             </button>
           </div>
@@ -59,7 +66,10 @@ export default function CartSidebar() {
           <span>${total.toLocaleString()}</span>
         </div>
 
-        <button className="w-full bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-bold py-2 rounded-xl">
+        <button 
+          onClick={() => setShowCheckoutForm(true)} // Added onClick
+          className="w-full bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-bold py-2 rounded-xl"
+        >
           Procesar pago
         </button>
       </div>
