@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { connectDB } from "@/lib/mongodb";
+import Story from "@/models/Story"; // Asumiendo que crearás un modelo Story
+
+export const dynamic = 'force-dynamic'; // Ensures that this route is always dynamic and not statically optimized
 
 export async function GET(req: Request) {
   try {
+    await connectDB();
+
     const url = new URL(req.url);
     const featuredOnly = url.searchParams.get("featured") === "1";
-
-    const db = await getDb();
-    const stories = db.collection("stories");
 
     let query = {};
 
@@ -15,11 +17,11 @@ export async function GET(req: Request) {
       query = { featured: true };
     }
 
-    const result = await stories
+    // Usando el modelo de Mongoose
+    const result = await Story
       .find(query)
       .sort({ createdAt: -1 })
-      .limit(featuredOnly ? 3 : 1000)
-      .toArray();
+      .limit(featuredOnly ? 3 : 1000);
 
     return NextResponse.json(result);
   } catch (error) {
