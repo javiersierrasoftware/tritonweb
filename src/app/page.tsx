@@ -1,6 +1,6 @@
 import HeroSlider from "@/components/HeroSlider";
 import Feed from "@/components/Feed";
-import EventsSection from "@/components/EventsSection";
+
 
 export default function Home() {
   return (
@@ -16,10 +16,7 @@ export default function Home() {
         <Feed />
       </section>
 
-      {/* EVENTOS: ya tiene max-w-6xl, NO envolver otra vez */}
-      <section>
-        <EventsSection />
-      </section>
+
 
     </main>
   );
