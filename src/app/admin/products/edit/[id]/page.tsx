@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ImageUp } from "lucide-react"; // Added ImageUp icon
+
 import { useAuth } from "@/hooks/useAuth"; // Assuming you have an auth hook
 
 interface EditProductPageProps {
@@ -15,9 +17,10 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     name: "",
     description: "",
     price: "",
-    image: "",
     stock: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,9 +50,11 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           name: data.name,
           description: data.description || "",
           price: data.price.toString(),
-          image: data.image || "",
           stock: data.stock.toString(),
         });
+        if (data.image) {
+          setImagePreview(data.image); // Set existing image as preview
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -61,6 +66,19 @@ export default function EditProductPage({ params }: EditProductPageProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setImageFile(null);
+      setImagePreview(null); // Clear preview when no file selected
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -75,18 +93,30 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       return;
     }
 
+    const productFormData = new FormData();
+    productFormData.append("name", formData.name);
+    productFormData.append("description", formData.description);
+    productFormData.append("price", formData.price);
+    productFormData.append("stock", formData.stock);
+    
+    // Only append image file if a new one is selected
+    if (imageFile) {
+      productFormData.append("image", imageFile);
+    } else if (imagePreview && !imageFile) {
+        // If no new file, but there was an existing image (imagePreview has URL), send it as a string
+        productFormData.append("image", imagePreview);
+    }
+    // If imageFile is null and imagePreview is null, no image will be sent.
+
+
     try {
       const res = await fetch(`/api/admin/products/${params.id}`, {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
+        //   "Content-Type": "application/json", // FormData sets its own Content-Type
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock),
-        }),
+        body: productFormData,
       });
 
       const data = await res.json();
@@ -185,17 +215,12 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         </div>
 
         <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-300">
-            URL de la Imagen
+          <label htmlFor="image-upload" className="cursor-pointer flex items-center gap-2 text-cyan-300">
+            <ImageUp size={20} />
+            <span>{imagePreview ? "Cambiar imagen" : "Seleccionar imagen"}</span>
           </label>
-          <input
-            type="url"
-            id="image"
-            name="image"
-            value={formData.image}
-            onChange={handleChange}
-            className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
-          />
+          <input id="image-upload" name="image" type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+          {imagePreview && <img src={imagePreview} className="mt-2 rounded-lg max-h-40" />}
         </div>
 
         <button

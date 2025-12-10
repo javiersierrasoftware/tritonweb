@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ImageUp } from "lucide-react"; // Added ImageUp icon
 
 import { useAuth } from "@/hooks/useAuth"; // Assuming you have an auth hook
 
@@ -10,9 +11,10 @@ export default function CreateProductPage() {
     name: "",
     description: "",
     price: "",
-    image: "",
     stock: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -21,6 +23,19 @@ export default function CreateProductPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setImageFile(null);
+      setImagePreview(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -35,18 +50,22 @@ export default function CreateProductPage() {
       return;
     }
 
+    const productFormData = new FormData();
+    productFormData.append("name", formData.name);
+    productFormData.append("description", formData.description);
+    productFormData.append("price", formData.price);
+    productFormData.append("stock", formData.stock);
+    if (imageFile) {
+      productFormData.append("image", imageFile);
+    }
+
     try {
       const res = await fetch("/api/admin/products", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${token}` // Send token for authentication
         },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock),
-        }),
+        body: productFormData,
       });
 
       const data = await res.json();
@@ -56,7 +75,9 @@ export default function CreateProductPage() {
       }
 
       setSuccess("Producto creado exitosamente!");
-      setFormData({ name: "", description: "", price: "", image: "", stock: "" }); // Clear form
+      setFormData({ name: "", description: "", price: "", stock: "" }); // Clear form
+      setImageFile(null);
+      setImagePreview(null);
       router.push("/admin/products/manage"); // Redirect to manage page
     } catch (err: any) {
       setError(err.message);
@@ -133,17 +154,12 @@ export default function CreateProductPage() {
         </div>
 
         <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-300">
-            URL de la Imagen
+          <label htmlFor="image-upload" className="cursor-pointer flex items-center gap-2 text-cyan-300">
+            <ImageUp size={20} />
+            <span>{imagePreview ? "Cambiar imagen" : "Seleccionar imagen"}</span>
           </label>
-          <input
-            type="url"
-            id="image"
-            name="image"
-            value={formData.image}
-            onChange={handleChange}
-            className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
-          />
+          <input id="image-upload" name="image" type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+          {imagePreview && <img src={imagePreview} className="mt-2 rounded-lg max-h-40" />}
         </div>
 
         <button
