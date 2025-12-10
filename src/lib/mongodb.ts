@@ -1,29 +1,32 @@
-import { MongoClient, Db } from "mongodb";
+import mongoose, { Connection } from "mongoose";
 
 const uri = process.env.MONGODB_URI;
-const dbName = process.env.MONGODB_DB || "tritonweb";
 
 if (!uri) {
   throw new Error("⚠️ Debes definir MONGODB_URI en las variables de entorno");
 }
 
-let client: MongoClient | null = null;
-let clientPromise: Promise<MongoClient>;
-
 declare global {
-  // Para evitar problemas de recarga en dev
-  // eslint-disable-next-line no-var
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
+  var mongoose: {
+    conn: Connection | null;
+    promise: Promise<Connection> | null;
+  };
 }
 
-if (!global._mongoClientPromise) {
-  client = new MongoClient(uri);
-  global._mongoClientPromise = client.connect();
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
 }
 
-clientPromise = global._mongoClientPromise;
+export async function connectDB() {
+  if (cached.conn) {
+    return cached.conn;
+  }
 
-export async function getDb(): Promise<Db> {
-  const client = await clientPromise;
-  return client.db(dbName);
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(uri!).then((mongoose) => mongoose.connection);
+  }
+  cached.conn = await cached.promise;
+  return cached.conn;
 }

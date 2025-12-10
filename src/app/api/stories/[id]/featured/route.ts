@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { connectDB } from "@/lib/mongodb";
+import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 
 export async function PATCH(
@@ -18,14 +18,15 @@ export async function PATCH(
       return NextResponse.json({ message: "Solo ADMIN puede modificar destacadas" }, { status: 403 });
     }
 
-    const db = await getDb();
-    const stories = db.collection("stories");
+    const connection = await connectDB();
+    const db = connection.db;
+    const stories = db!.collection("stories");
 
     const body = await req.json();
     const { featured } = body;
 
     await stories.updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new mongoose.Types.ObjectId(params.id) },
       { $set: { featured } }
     );
 

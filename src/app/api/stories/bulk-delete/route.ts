@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { ObjectId } from "mongodb";
-import { getDb } from "@/lib/mongodb";
+import mongoose from "mongoose";
+import { connectDB } from "@/lib/mongodb";
 
 export async function POST(req: Request) {
   try {
@@ -10,10 +10,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Formato inválido" }, { status: 400 });
     }
 
-    const objectIds = ids.map((id) => new ObjectId(id));
+    const objectIds = ids.map((id) => new mongoose.Types.ObjectId(id));
 
-    const db = await getDb();
-    await db.collection("stories").deleteMany({ _id: { $in: objectIds } });
+    const connection = await connectDB();
+    const db = connection.db;
+    await db!.collection("stories").deleteMany({ _id: { $in: objectIds } });
 
     return NextResponse.json({ message: "Historias eliminadas" });
   } catch (err) {
