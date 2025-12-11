@@ -1,28 +1,15 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { connectDB } from "@/lib/mongodb";
 import cloudinary from "@/lib/cloudinary";
+import Story from "@/models/Story";
 import { Readable } from "stream";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
-// Helper para simular la obtención de la sesión (reemplazar con tu lógica real, ej. next-auth)
-async function getServerSession(req: Request) {
-  const { headers } = req;
-  const cookie = headers.get('cookie');
-  if (!cookie) return null;
-
-  const tokenCookie = cookie.split(';').find(c => c.trim().startsWith('triton_session_token='));
-  if (!tokenCookie) return null;
-
-  const token = tokenCookie.split('=')[1];
-  const jwt = require("jsonwebtoken");
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return null;
-
-  try {
-    const decoded = jwt.verify(token, secret);
-    return { user: decoded };
-  } catch (error) {
-    return null;
-  }
+interface DecodedToken {
+  id: string;
+  role: string;
+  [key: string]: any;
 }
 
 export async function POST(req: Request) {
@@ -30,12 +17,19 @@ export async function POST(req: Request) {
 
   try {
     // -------------------------
-    // 1️⃣ VERIFICAR SESIÓN DE ADMIN
+    // 1️⃣ VERIFICAR SESIÓN DE ADMIN (MÉTODO MANUAL)
     // -------------------------
-    const session = await getServerSession(req);
+    const cookieStore = cookies();
+    const tokenCookie = cookieStore.get("triton_session_token");
+    
+    if (!tokenCookie) {
+      throw new Error("No se encontró el token de sesión.");
+    }
 
-    if (!session || (session.user as any).role !== "ADMIN") {
-      console.log("⛔ Usuario no autorizado o no es admin:", session?.user);
+    const token = jwt.verify(tokenCookie.value, process.env.JWT_SECRET!) as DecodedToken;
+
+    if (!token || token.role !== "ADMIN") {
+      console.log("⛔ Usuario no autorizado o no es admin:", token);
       return NextResponse.json(
         { message: "Acceso denegado. Solo ADMIN puede crear historias." },
         { status: 403 }
@@ -89,16 +83,16 @@ export async function POST(req: Request) {
     // -------------------------------------
     // 4️⃣ GUARDAR HISTORIA EN MONGODB
     // -------------------------------------
-    const db = await getDb();
-    const stories = db.collection("stories");
-
-    await stories.insertOne({
-      user,
-      userTag,
-      category,
-      description,
+    await connectDB();
+    
+    await Story.create({
+      title: `${category} de ${user}`, // Título generado a partir de los datos
+      content: description,
+      author: user,
       image: imageUrl,
-      createdAt: new Date(),
+      // Los campos userTag y category no están en el modelo Story,
+      // se podrían añadir al Schema si son necesarios.
+      // timestamps: true en el modelo se encarga de createdAt.
     });
 
     console.log("✅ Historia guardada correctamente en MongoDB");

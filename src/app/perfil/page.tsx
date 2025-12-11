@@ -70,40 +70,35 @@ export default function Dashboard() {
           </div>
           <p className="text-gray-400 mb-6">Desde aquí puedes gestionar el contenido de la web.</p>
           
-          <div className="flex flex-wrap gap-4">
-            <Link href="/stories/create" className="inline-block bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-bold py-3 px-6 rounded-full hover:opacity-90 transition">
-              Crear Nueva Historia
-            </Link>
-            <Link href="/stories/manage" className="inline-block bg-white/10 text-white font-bold py-3 px-6 rounded-full hover:bg-white/20 transition">
-              Gestionar Historias
-            </Link>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Historias</h3>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/stories/create" className="inline-block bg-white/10 text-white font-bold py-3 px-6 rounded-full hover:bg-white/20 transition">
+                  Crear Nueva Historia
+                </Link>
+                <Link href="/stories/manage" className="inline-block bg-white/10 text-white font-bold py-3 px-6 rounded-full hover:bg-white/20 transition">
+                  Gestionar Historias
+                </Link>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Eventos</h3>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/events/create" className="inline-block bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-bold py-3 px-6 rounded-full hover:opacity-90 transition">
+                  Crear Nuevo Evento
+                </Link>
+                <Link href="/events/manage" className="inline-block bg-white/10 text-white font-bold py-3 px-6 rounded-full hover:bg-white/20 transition">
+                  Gestionar Eventos
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       )}
 
-      {/* EVENTOS INSCRITOS */}
-      <section className="bg-[#111] border border-white/5 rounded-2xl p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <CalendarDays size={22} className="text-cyan-300" />
-          <h2 className="text-xl font-semibold">Mis Eventos</h2>
-        </div>
 
-        <p className="text-gray-400 text-sm">
-          Próximamente podrás ver aquí tus inscripciones.
-        </p>
-      </section>
 
-      {/* COMPRAS */}
-      <section className="bg-[#111] border border-white/5 rounded-2xl p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <ShoppingBag size={22} className="text-cyan-300" />
-          <h2 className="text-xl font-semibold">Mis Compras</h2>
-        </div>
-
-        <p className="text-gray-400 text-sm">
-          Próximamente podrás ver aquí tu historial de compras.
-        </p>
-      </section>
     </main>
   );
 }

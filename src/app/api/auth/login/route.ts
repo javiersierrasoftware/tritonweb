@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { getDb } from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
 
 const TOKEN_COOKIE = "triton_session_token"; // Cookie nueva y limpia
 
@@ -17,11 +17,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const db = await getDb();
-    const users = db.collection("users");
+    await connectDB();
 
     // Buscar usuario
-    const user = await users.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return NextResponse.json(
         { message: "Credenciales inválidas" },
@@ -41,7 +40,7 @@ export async function POST(req: Request) {
     // Generar JWT
     const secret = process.env.JWT_SECRET!;
     const payload = {
-      sub: (user._id as ObjectId).toString(),
+      id: user._id.toString(), // 'id' es más estándar en los tokens de next-auth
       email: user.email,
       name: user.name,
       role: user.role ?? "USER", // cuidado aquí
@@ -52,7 +51,7 @@ export async function POST(req: Request) {
     const response = NextResponse.json({
       message: "Login exitoso",
       user: {
-        id: payload.sub,
+        id: user._id.toString(),
         name: user.name,
         email: user.email,
         role: user.role ?? "USER",

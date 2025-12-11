@@ -23,9 +23,9 @@ export default function PublicStoriesPage() {
   // Filtrar
   const filtered = stories.filter(
     (s) =>
-      s.user.toLowerCase().includes(search.toLowerCase()) ||
-      s.description.toLowerCase().includes(search.toLowerCase()) ||
-      s.category.toLowerCase().includes(search.toLowerCase())
+      (s.author && s.author.toLowerCase().includes(search.toLowerCase())) ||
+      (s.content && s.content.toLowerCase().includes(search.toLowerCase())) ||
+      (s.title && s.title.toLowerCase().includes(search.toLowerCase()))
   );
 
   // Paginación
@@ -64,18 +64,19 @@ export default function PublicStoriesPage() {
             <div className="relative w-full h-80 bg-black overflow-hidden">
               <Image
                 src={story.image}
-                alt={story.description}
+                alt={story.title || "Imagen de la historia"}
                 fill
                 className="object-cover object-center"
                 sizes="(max-width: 768px) 100vw, 33vw"
               />
             </div>
 
-            <div className="p-4 space-y-1">
-              <p className="font-semibold text-white">{story.user}</p>
-              <p className="text-xs text-gray-400">@{story.userTag}</p>
-              <p className="text-sm text-gray-300 mt-1">{story.description}</p>
-              <span className="text-xs text-cyan-300">{story.category}</span>
+            <div className="p-4 space-y-2">
+              <p className="font-semibold text-white">{story.author}</p>
+              <p className="text-sm text-gray-300 mt-1 line-clamp-3">
+                {story.content}
+              </p>
+              <p className="text-xs text-cyan-300 pt-1">{story.title}</p>
             </div>
           </div>
         ))}

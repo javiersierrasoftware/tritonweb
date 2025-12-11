@@ -3,8 +3,8 @@ import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
 import jwt from "jsonwebtoken";
 import { headers, cookies } from "next/headers";
-import cloudinary from "@/lib/cloudinary"; // Added
-import { Readable } from "stream"; // Added
+import cloudinary from "@/lib/cloudinary";
+import { Readable } from "stream";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,19 +14,21 @@ interface DecodedToken {
   [key: string]: any;
 }
 
-// ... (GET function remains the same)
+// Helper function to extract token
+function getToken(req: Request) {
+  const cookieStore = cookies();
+  let token = cookieStore.get("triton_session_token")?.value;
 
-export async function POST(req: Request) {
+  // Fallback to Authorization header if not found in cookie
+  if (!token) {
+    token = headers().get("authorization")?.split(" ")[1];
+  }
+  return token;
+}
+
+export async function GET(req: Request) {
   try {
-    // Try to get token from cookie first
-    const cookieStore = cookies();
-    let token = cookieStore.get("triton_session_token")?.value;
-
-    // Fallback to Authorization header if not found in cookie
-    if (!token) {
-      token = headers().get("authorization")?.split(" ")[1];
-    }
-
+    const token = getToken(req);
     if (!token) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
 
     const secret = process.env.JWT_SECRET!;
@@ -37,10 +39,28 @@ export async function POST(req: Request) {
     }
 
     await connectDB();
+    const products = await Product.find({}).sort({ createdAt: -1 });
 
-    // -------------------------------------
-    // 2️⃣ LEER FORM DATA DEL REQUEST
-    // -------------------------------------
+    return NextResponse.json(products);
+  } catch (error: any) {
+    console.error("Error fetching products:", error);
+    return NextResponse.json({ message: "Error interno del servidor", error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const token = getToken(req);
+    if (!token) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+
+    const secret = process.env.JWT_SECRET!;
+    const user = jwt.verify(token, secret) as DecodedToken;
+
+    if (user.role !== "ADMIN") {
+      return NextResponse.json({ message: "No autorizado" }, { status: 403 });
+    }
+
+    await connectDB();
     const form = await req.formData();
 
     const name = form.get("name")?.toString() || "";

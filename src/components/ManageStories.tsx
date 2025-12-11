@@ -34,9 +34,9 @@ export default function ManageStories() {
   // 👉 Filtrar historias
   const filteredStories = stories.filter(
     (s) =>
-      s.user.toLowerCase().includes(search.toLowerCase()) ||
-      s.description.toLowerCase().includes(search.toLowerCase()) ||
-      s.category.toLowerCase().includes(search.toLowerCase())
+      (s.author && s.author.toLowerCase().includes(search.toLowerCase())) ||
+      (s.content && s.content.toLowerCase().includes(search.toLowerCase())) ||
+      (s.title && s.title.toLowerCase().includes(search.toLowerCase()))
   );
 
   // 👉 Paginación
@@ -87,9 +87,18 @@ export default function ManageStories() {
 
   // 👉 Eliminar una
   const deleteOne = async (id: string) => {
-    await fetch(`/api/stories/${id}`, { method: "DELETE" });
-    setStories((prev) => prev.filter((s) => s._id !== id));
-    setConfirmDeleteId(null);
+    try {
+      const res = await fetch(`/api/stories/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        throw new Error("No se pudo eliminar la historia.");
+      }
+      setStories((prev) => prev.filter((s) => s._id !== id));
+    } catch (error) {
+      console.error(error);
+      alert("Error al eliminar la historia.");
+    } finally {
+      setConfirmDeleteId(null);
+    }
   };
 
   return (
@@ -179,7 +188,7 @@ export default function ManageStories() {
             <div className="relative w-full h-80 bg-black rounded-t-xl overflow-hidden">
               <Image
                 src={post.image}
-                alt={post.description}
+                alt={post.title || "Imagen de la historia"}
                 fill
                 className="object-cover object-center"
                 sizes="(max-width: 768px) 100vw, 33vw"
@@ -188,12 +197,11 @@ export default function ManageStories() {
 
             {/* Texto */}
             <div className="p-4">
-              <p className="font-semibold text-white">{post.user}</p>
-              <p className="text-xs text-gray-400">@{post.userTag}</p>
+              <p className="font-semibold text-white">{post.author}</p>
               <p className="text-sm mt-2 text-gray-300 line-clamp-2">
-                {post.description}
+                {post.content}
               </p>
-              <span className="text-xs text-cyan-300">{post.category}</span>
+              <span className="text-xs text-cyan-300">{post.title}</span>
             </div>
           </div>
         ))}

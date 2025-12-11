@@ -68,7 +68,7 @@ export default function RegisterPage() {
               required
               name="name"
               type="text"
-              placeholder="Ej: Javier Sierra"
+              placeholder="Ej: Ernesto David Pérez Gutierrez"
               className="bg-black border border-white/10 rounded-lg px-4 py-3 text-white focus:border-cyan-300 outline-none"
             />
           </div>

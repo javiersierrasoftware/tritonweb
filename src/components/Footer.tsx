@@ -9,7 +9,7 @@ export default function Footer() {
         {/* CONTACTO */}
         <div>
           <h3 className="text-lg font-semibold mb-3 text-white">Contacto</h3>
-          <p className="text-gray-400 text-sm">WhatsApp: +57 xxx xxx xxxx</p>
+          <p className="text-gray-400 text-sm">WhatsApp: +57 321 4457170</p>
           <p className="text-gray-400 text-sm">Sincelejo, Sucre – Colombia</p>
         </div>
 
@@ -30,13 +30,13 @@ export default function Footer() {
         {/* CREDITO */}
         <div className="text-gray-400 text-sm">
           <p>Diseñado y desarrollado por</p>
-          <p className="font-semibold text-white">TICSOFT S.A.S.</p>
+          <p className="font-semibold text-white">CREATIX S.A.S.</p>
           <Link
-            href="https://www.ticsoft.co"
+            href="https://www.crea-tix.com"
             target="_blank"
             className="hover:text-cyan-300 transition text-sm"
           >
-            www.ticsoft.co
+            www.crea-tix.com
           </Link>
         </div>
       </div>

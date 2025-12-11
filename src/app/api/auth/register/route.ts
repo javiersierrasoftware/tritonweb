@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getDb } from "@/lib/mongodb";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
 
 export async function POST(req: Request) {
   try {
@@ -13,10 +14,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const db = await getDb();
-    const users = db.collection("users");
+    await connectDB();
 
-    const existing = await users.findOne({ email });
+    const existing = await User.findOne({ email });
     if (existing) {
       return NextResponse.json(
         { message: "Ya existe un usuario registrado con ese correo." },
@@ -26,18 +26,16 @@ export async function POST(req: Request) {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const now = new Date();
-    const result = await users.insertOne({
+    const newUser = await User.create({
       name,
       email,
       password: hashed,
       discipline: discipline || null,
       goal: goal || null,
-      createdAt: now,
     });
 
     return NextResponse.json(
-      { message: "Usuario registrado correctamente", userId: result.insertedId },
+      { message: "Usuario registrado correctamente", userId: newUser._id },
       { status: 201 }
     );
   } catch (err) {

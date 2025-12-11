@@ -13,10 +13,10 @@ export default function ManageProductsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState<any>(null);
   const router = useRouter();
-  const { user, token } = useAuth(); // Assuming useAuth provides user and token
+  const { user } = useAuth(); // Assuming useAuth provides user
 
   const fetchProducts = async () => {
-    if (!user || user.role !== "ADMIN" || !token) {
+    if (!user || user.role !== "ADMIN") {
       setError("No autorizado.");
       setIsLoading(false);
       return;
@@ -24,9 +24,7 @@ export default function ManageProductsPage() {
 
     try {
       const res = await fetch("/api/admin/products", {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+        credentials: "include"
       });
       const data = await res.json();
       if (!res.ok) {
@@ -42,7 +40,7 @@ export default function ManageProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, [user, token]); // Refetch when user or token changes
+  }, [user]); // Refetch when user changes
 
   const handleDeleteClick = (product: any) => {
     setProductToDelete(product);
@@ -50,14 +48,12 @@ export default function ManageProductsPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!productToDelete || !token) return;
+    if (!productToDelete) return;
 
     try {
       const res = await fetch(`/api/admin/products/${productToDelete._id}`, {
         method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+        credentials: "include"
       });
 
       if (!res.ok) {
