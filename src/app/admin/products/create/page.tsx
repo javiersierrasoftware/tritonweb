@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImageUp } from "lucide-react"; // Added ImageUp icon
-
-import { useAuth } from "@/hooks/useAuth"; // Assuming you have an auth hook
+import { ImageUp } from "lucide-react";
 
 export default function CreateProductPage() {
   const [formData, setFormData] = useState({
@@ -19,7 +17,6 @@ export default function CreateProductPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
-  const { user, token } = useAuth(); // Assuming useAuth provides user and token
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,12 +41,6 @@ export default function CreateProductPage() {
     setError(null);
     setSuccess(null);
 
-    if (!user || user.role !== "ADMIN") {
-      setError("Solo los administradores pueden crear productos.");
-      setIsLoading(false);
-      return;
-    }
-
     const productFormData = new FormData();
     productFormData.append("name", formData.name);
     productFormData.append("description", formData.description);
@@ -62,9 +53,7 @@ export default function CreateProductPage() {
     try {
       const res = await fetch("/api/admin/products", {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}` // Send token for authentication
-        },
+        credentials: "include", // Send cookies for authentication
         body: productFormData,
       });
 
@@ -78,7 +67,8 @@ export default function CreateProductPage() {
       setFormData({ name: "", description: "", price: "", stock: "" }); // Clear form
       setImageFile(null);
       setImagePreview(null);
-      router.push("/admin/products/manage"); // Redirect to manage page
+      // Redirect after a short delay to allow user to see success message
+      setTimeout(() => router.push("/admin/products/manage"), 1000);
     } catch (err: any) {
       setError(err.message);
     } finally {

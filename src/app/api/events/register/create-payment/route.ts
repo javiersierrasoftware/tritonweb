@@ -103,8 +103,8 @@ export async function POST(request: Request) {
         throw new Error("Wompi environment variables are not set.");
     }
 
-    const reference = newRegistration._id.toString();
-    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/events/register/status/${reference}`;
+    const reference = `reg_${newRegistration._id.toString()}`;
+    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/events/register/status/${newRegistration._id.toString()}`;
 
     const wompiApiUrl = "https://sandbox.wompi.co/v1/payment_links";
 

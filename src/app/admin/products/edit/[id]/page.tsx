@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ImageUp } from "lucide-react"; // Added ImageUp icon
 
-import { useAuth } from "@/hooks/useAuth"; // Assuming you have an auth hook
-
 interface EditProductPageProps {
   params: {
     id: string;
@@ -26,21 +24,12 @@ export default function EditProductPage({ params }: EditProductPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
-  const { user, token } = useAuth(); // Assuming useAuth provides user and token
 
   useEffect(() => {
     async function fetchProduct() {
-      if (!user || user.role !== "ADMIN" || !token) {
-        setError("No autorizado.");
-        setIsLoading(false);
-        return;
-      }
-
       try {
         const res = await fetch(`/api/admin/products/${params.id}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
+          credentials: "include"
         });
         const data = await res.json();
         if (!res.ok) {
@@ -62,7 +51,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       }
     }
     fetchProduct();
-  }, [params.id, user, token]);
+  }, [params.id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -87,12 +76,6 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     setError(null);
     setSuccess(null);
 
-    if (!user || user.role !== "ADMIN") {
-      setError("Solo los administradores pueden editar productos.");
-      setIsSaving(false);
-      return;
-    }
-
     const productFormData = new FormData();
     productFormData.append("name", formData.name);
     productFormData.append("description", formData.description);
@@ -112,10 +95,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     try {
       const res = await fetch(`/api/admin/products/${params.id}`, {
         method: "PATCH",
-        headers: {
-        //   "Content-Type": "application/json", // FormData sets its own Content-Type
-          "Authorization": `Bearer ${token}`
-        },
+        credentials: "include",
         body: productFormData,
       });
 
@@ -141,10 +121,6 @@ export default function EditProductPage({ params }: EditProductPageProps) {
 
   if (error) {
     return <div className="max-w-2xl mx-auto px-4 py-8 text-red-500 text-center">{error}</div>;
-  }
-
-  if (!user || user.role !== "ADMIN") {
-    return <div className="max-w-2xl mx-auto px-4 py-8 text-red-500 text-center">Acceso denegado. Solo administradores.</div>;
   }
 
   return (

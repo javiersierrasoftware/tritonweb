@@ -77,6 +77,12 @@ export async function POST(request: Request) {
         try {
             const secret = process.env.JWT_SECRET!;
             const userPayload = jwt.verify(token, secret) as DecodedToken;
+
+            // Prevent admins from making purchases
+            if (userPayload.role === 'ADMIN') {
+                return NextResponse.json({ message: "Los administradores no pueden realizar compras." }, { status: 403 });
+            }
+
             userId = userPayload.id;
         } catch (error) {
             // Invalid token, proceed as guest
@@ -102,8 +108,8 @@ export async function POST(request: Request) {
     }
 
     const amountInCents = calculatedTotal * 100;
-    const reference = newOrder._id.toString();
-    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/tienda/checkout/status/${reference}`; // New status page for store checkout
+    const reference = `ord_${newOrder._id.toString()}`;
+    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/tienda/checkout/status/${newOrder._id.toString()}`;
 
     const wompiApiUrl = "https://sandbox.wompi.co/v1/payment_links";
 
@@ -114,7 +120,7 @@ export async function POST(request: Request) {
             "Authorization": `Bearer ${wompiPrvKey}`
         },
         body: JSON.stringify({
-            name: `Compra en Tienda TRITON (Orden: ${reference})`,
+            name: `Compra en Tienda TRITON (Orden: ${newOrder._id.toString()})`,
             description: `Productos: ${itemsForOrder.map(item => item.name).join(', ')}`,
             single_use: true,
             collect_shipping: false, // Shipping collected in form, not via Wompi
