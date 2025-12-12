@@ -166,6 +166,15 @@ export default function Navbar() {
                       >
                         Gestionar eventos
                       </Link>
+                      {/* Hero Slider Admin Links */}
+                      <p className="px-4 pt-2 pb-2 text-xs text-gray-400 font-semibold">Hero Slider</p>
+                      <Link
+                        href="/admin/hero-slider"
+                        className="block px-4 py-3 text-sm hover:bg-white/10 transition"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Gestionar Hero Slider
+                      </Link>
                       <p className="px-4 pt-2 pb-2 text-xs text-gray-400 font-semibold">Tienda</p>
                       <Link
                         href="/admin/products/create"
@@ -284,6 +293,9 @@ export default function Navbar() {
                   </MobileLink>
                   <MobileLink href="/admin/sales" onClick={toggleMobile}>
                     Ventas realizadas
+                  </MobileLink>
+                  <MobileLink href="/admin/hero-slider" onClick={toggleMobile}>
+                    Gestionar Hero Slider
                   </MobileLink>
                 </>
               )}

@@ -1,6 +1,8 @@
 import HeroSlider from "@/components/HeroSlider";
 import Feed from "@/components/Feed";
 import EventsFeed from "@/components/EventsFeed";
+import TritonServices from "@/components/services/TritonServices";
+import TritonKidsServices from "@/components/services/TritonKidsServices";
 
 
 export default function Home() {
@@ -22,7 +24,9 @@ export default function Home() {
         <EventsFeed />
       </section>
 
-
+      <TritonServices />
+      
+      <TritonKidsServices />
 
     </main>
   );

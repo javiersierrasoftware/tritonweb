@@ -3,49 +3,56 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import useSWR from "swr";
 
-const slides = [
-  {
-    id: 1,
-    image:
-      "https://images.pexels.com/photos/1199590/pexels-photo-1199590.jpeg",
-    title: "Corre con nosotros",
-    subtitle: "Entrena, mejora y vive la experiencia TRITON Running",
-  },
-  {
-    id: 2,
-    image:
-      "https://images.pexels.com/photos/260445/pexels-photo-260445.jpeg",
-    title: "Nada más lejos",
-    subtitle: "Sesiones de natación para todos los niveles",
-  },
-  {
-    id: 3,
-    image:
-      "https://images.pexels.com/photos/248547/pexels-photo-248547.jpeg",
-    title: "Pedalea hacia tus metas",
-    subtitle: "Únete al equipo de ciclismo y supera tus límites",
-  },
-];
+interface HeroSlide {
+  _id: string;
+  image: string;
+  title: string;
+  subtitle: string;
+  buttonLink: string;
+  order: number;
+}
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function HeroSlider() {
   const [current, setCurrent] = useState(0);
 
-  // Cambio automático cada 4s
+  const { data: slides, error, isLoading } = useSWR<HeroSlide[]>("/api/admin/hero-slider", fetcher, {
+    revalidateOnFocus: false,
+  });
+
+  // All hooks must be called before any conditional returns.
   useEffect(() => {
+    // Guard against running the effect if data is not yet available or valid
+    if (!slides || !Array.isArray(slides) || slides.length === 0) {
+      return;
+    }
+
+    const sortedSlides = [...slides].sort((a, b) => a.order - b.order);
+
     const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
+      setCurrent((prev) => (prev + 1) % sortedSlides.length);
     }, 4000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [slides]); // Depend on the slides data itself
+
+  // Conditional rendering can happen after all hooks are called.
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Failed to load slides.</div>;
+  if (!Array.isArray(slides) || slides.length === 0) return null;
+
+  // Sort slides for rendering
+  const sortedSlides = [...slides].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden rounded-2xl">
-
+    <div className="relative w-full h-[49vh] md:h-[56vh] overflow-hidden rounded-2xl">
       {/* SLIDES */}
-      {slides.map((slide, index) => (
+      {sortedSlides.map((slide, index) => (
         <div
-          key={slide.id}
+          key={slide._id}
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
             index === current ? "opacity-100" : "opacity-0"
           }`}
@@ -56,11 +63,7 @@ export default function HeroSlider() {
             fill
             className="object-cover"
           />
-
-          {/* OVERLAY OSCURO */}
           <div className="absolute inset-0 bg-black/50"></div>
-
-          {/* TEXTO */}
           <div className="absolute inset-0 flex flex-col justify-center items-start px-10 md:px-20 text-white">
             <h1 className="text-4xl md:text-6xl font-bold mb-3 drop-shadow-lg">
               {slide.title}
@@ -68,7 +71,6 @@ export default function HeroSlider() {
             <p className="text-lg md:text-2xl mb-6 text-gray-200 drop-shadow-lg">
               {slide.subtitle}
             </p>
-
             <Link
               href="/join"
               className="px-6 py-3 rounded-full text-black font-semibold bg-gradient-to-br from-cyan-300 to-orange-300 hover:opacity-90 transition text-lg"
@@ -78,10 +80,9 @@ export default function HeroSlider() {
           </div>
         </div>
       ))}
-
       {/* DOTS INDICADORES */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
-        {slides.map((_, i) => (
+        {sortedSlides.map((_, i) => (
           <button
             key={i}
             className={`h-3 w-3 rounded-full transition ${

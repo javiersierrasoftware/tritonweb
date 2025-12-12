@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
 
 interface User {
   id: string;
@@ -11,39 +11,24 @@ interface User {
 
 interface AuthState {
   user: User | null;
-  isLoading: boolean;
   logout: () => void;
 }
 
 export function useAuth(): AuthState {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: session } = useSession();
 
-  useEffect(() => {
-    // Read from localStorage
-    const storedUser = localStorage.getItem("user");
+  const user: User | null = session?.user
+    ? {
+        id: session.user.id as string,
+        email: session.user.email as string,
+        name: session.user.name as string,
+        role: session.user.role as string,
+      }
+    : null;
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
-
-    // Optional: Listen for changes in localStorage from other tabs/windows
-    const syncAuth = () => {
-      const updatedUser = localStorage.getItem("user");
-      setUser(updatedUser ? JSON.parse(updatedUser) : null);
-    };
-
-    window.addEventListener("storage", syncAuth);
-    return () => window.removeEventListener("storage", syncAuth);
-  }, []);
-
-  const logout = () => {
-    localStorage.removeItem("user");
-    // Also remove any cookie-based token if applicable
-    document.cookie = "token=; path=/; max-age=0;"; 
-    setUser(null);
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/login" }); // Redirects to /login after logout
   };
 
-  return { user, isLoading, logout };
+  return { user, logout: handleLogout };
 }
