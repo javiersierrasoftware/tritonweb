@@ -19,10 +19,10 @@ export function useAuth(): AuthState {
 
   const user: User | null = session?.user
     ? {
-        id: session.user.id as string,
-        email: session.user.email as string,
-        name: session.user.name as string,
-        role: session.user.role as string,
+        id: session.user.id, // Now correctly typed via next-auth.d.ts
+        email: session.user.email ?? "", // Safely handle possible null/undefined
+        name: session.user.name ?? "", // Safely handle possible null/undefined
+        role: session.user.role, // Now correctly typed via next-auth.d.ts
       }
     : null;
 
