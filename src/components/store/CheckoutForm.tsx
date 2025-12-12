@@ -12,7 +12,7 @@ interface CheckoutFormProps {
 
 export default function CheckoutForm({ onClose, totalAmount }: CheckoutFormProps) {
   const { items } = useCartStore(); // Get cart items
-  const { user, token } = useAuth(); // Assuming useAuth provides user and token
+  const { user } = useAuth(); // Assuming useAuth provides user
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -69,10 +69,8 @@ export default function CheckoutForm({ onClose, totalAmount }: CheckoutFormProps
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Send token if available, but Wompi payment initiation often doesn't need
-          // client-side token directly if the backend handles auth via cookies.
-          // For now, assuming backend will use cookies if user is logged in.
         },
+        credentials: "include", // <<< ADD THIS LINE
         body: JSON.stringify(orderDetails),
       });
 
