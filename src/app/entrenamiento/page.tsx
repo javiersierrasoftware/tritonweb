@@ -36,9 +36,10 @@ export default function EntrenamientoPage() {
         <h2 className="text-2xl font-semibold mb-4">Sitios de entrenamiento</h2>
 
         <ul className="space-y-4 text-gray-300">
-          <li>🏃‍♂️ Parque Santander — Running</li>
-          <li>🚴‍♂️ Vía Sincelejo – Sampués — Ciclismo</li>
-          <li>🏊‍♂️ Piscina Olímpica — Natación</li>
+          <li>🏃‍♂️ Ciclo vía Sincelejo- Corozal — Running</li>
+          <li>🏃‍♂️ Estadio Arturo Cumplido Sierra — Running</li>
+          <li>🚴‍♂️ Vías de Sincelejo — Ciclismo</li>
+          <li>🏊‍♂️ Piscinas — Natación</li>
         </ul>
       </section>
 
