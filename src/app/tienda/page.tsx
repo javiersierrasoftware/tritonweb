@@ -12,7 +12,8 @@ export default function StorePage() {
         const res = await fetch("/api/products");
         if (res.ok) {
           const data = await res.json();
-          setProducts(data);
+          const availableProducts = data.filter((product: any) => product.stock > 0);
+          setProducts(availableProducts);
         }
       } catch (error) {
         console.error("Error cargando productos:", error);

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import { Loader2 } from 'lucide-react';
+import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 
 interface HeroSlide {
   _id: string;
@@ -14,7 +15,7 @@ interface HeroSlide {
   order: number;
 }
 
-export default function ManageHeroSlider() {
+function ManageHeroSliderPageContent() {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,17 +41,14 @@ export default function ManageHeroSlider() {
       if (!res.ok) {
         throw new Error(data.message || "Error al cargar los slides.");
       }
-      // Ensure data is an array before setting it
       if (Array.isArray(data)) {
         setSlides(data);
       } else {
-        // Handle cases where the API returns a 200 OK but not an array
-        // This can happen if the user is not authenticated and the API returns an error object
         throw new Error(data.message || "La respuesta del servidor no es válida.");
       }
     } catch (err: any) {
       setError(err.message || "Ocurrió un error inesperado.");
-      setSlides([]); // Clear slides on error
+      setSlides([]);
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +101,7 @@ export default function ManageHeroSlider() {
       const res = await fetch(url, {
         method,
         body: data,
-        credentials: "include", // <<< Important for auth
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -113,10 +111,10 @@ export default function ManageHeroSlider() {
 
       toast.success("Hero slide guardado con éxito!");
       resetForm();
-      await fetchSlides(); // Re-fetch slides
+      await fetchSlides();
     } catch (error: any) {
       toast.error(error.message || "Error saving hero slide.");
-      setIsSubmitting(false); // Stop submitting on error
+      setIsSubmitting(false);
     }
   };
 
@@ -141,7 +139,7 @@ export default function ManageHeroSlider() {
     try {
       const res = await fetch(`/api/admin/hero-slider/${id}`, {
         method: "DELETE",
-        credentials: "include", // <<< Important for auth
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -150,7 +148,7 @@ export default function ManageHeroSlider() {
       }
 
       toast.success("Hero slide eliminado con éxito!");
-      await fetchSlides(); // Re-fetch slides
+      await fetchSlides();
     } catch (error: any) {
       toast.error(error.message || "Error deleting hero slide.");
     }
@@ -175,20 +173,21 @@ export default function ManageHeroSlider() {
   }
 
   return (
-    <div className="container mx-auto p-4 text-white">
-      <h1 className="text-2xl font-bold mb-4">Administrar Hero Slider</h1>
-
-      <button
-        onClick={() => {
-          setIsModalOpen(true);
-          setCurrentSlide(null);
-          setFormData({ title: "", subtitle: "", buttonLink: "", order: "", image: null });
-          setPreviewImage(null);
-        }}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
-      >
-        Agregar Nuevo Slide
-      </button>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Administrar Hero Slider</h1>
+        <button
+          onClick={() => {
+            setIsModalOpen(true);
+            setCurrentSlide(null);
+            setFormData({ title: "", subtitle: "", buttonLink: "", order: "", image: null });
+            setPreviewImage(null);
+          }}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+        >
+          Agregar Nuevo Slide
+        </button>
+      </div>
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full flex justify-center items-center z-50">
@@ -197,7 +196,6 @@ export default function ManageHeroSlider() {
               {currentSlide ? "Editar Slide" : "Crear Nuevo Slide"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Form fields remain the same, but ensure text color is visible */}
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-300">Title</label>
                 <input type="text" name="title" id="title" value={formData.title} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm p-2 text-white" required />
@@ -231,25 +229,25 @@ export default function ManageHeroSlider() {
         </div>
       )}
 
-      <div className="overflow-x-auto bg-gray-800/50 rounded-lg shadow-xl mt-6">
-        <table className="min-w-full divide-y divide-gray-700">
-        <thead className="bg-gray-700/50">
+      <div className="bg-[#111] rounded-lg shadow overflow-x-auto">
+        <table className="min-w-full divide-y divide-white/10">
+        <thead className="bg-[#181818]">
             <tr>
-              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Image</th>
-              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Title</th>
-              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Subtitle</th>
-              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Order</th>
-              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
+              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Image</th>
+              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Title</th>
+              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Subtitle</th>
+              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Order</th>
+              <th className="py-3 px-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700">
+          <tbody className="divide-y divide-white/10">
             {slides.map((slide) => (
-              <tr key={slide._id} className="hover:bg-gray-800">
-                <td className="py-2 px-4"><div className="w-16 h-9 relative rounded-md overflow-hidden"><Image src={slide.image} alt={slide.title} layout="fill" objectFit="cover"/></div></td>
-                <td className="py-2 px-4">{slide.title}</td>
-                <td className="py-2 px-4 text-sm text-gray-400">{slide.subtitle.substring(0, 50)}...</td>
-                <td className="py-2 px-4">{slide.order}</td>
-                <td className="py-2 px-4">
+              <tr key={slide._id}>
+                <td className="px-6 py-4"><div className="w-16 h-9 relative rounded-md overflow-hidden"><Image src={slide.image} alt={slide.title} layout="fill" objectFit="cover"/></div></td>
+                <td className="px-6 py-4">{slide.title}</td>
+                <td className="px-6 py-4 text-sm text-gray-400">{slide.subtitle.substring(0, 50)}...</td>
+                <td className="px-6 py-4">{slide.order}</td>
+                <td className="px-6 py-4">
                   <button onClick={() => handleEdit(slide)} className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-2 rounded text-xs mr-2">Edit</button>
                   <button onClick={() => handleDelete(slide._id)} className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs">Delete</button>
                 </td>
@@ -260,4 +258,12 @@ export default function ManageHeroSlider() {
       </div>
     </div>
   );
+}
+
+export default function ManageHeroSlider() {
+  return (
+    <AdminAuthGuard>
+      <ManageHeroSliderPageContent />
+    </AdminAuthGuard>
+  )
 }

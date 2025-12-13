@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 
 interface FormState {
   title: string;
@@ -17,7 +18,7 @@ const INITIAL_STATE: FormState = {
   image: "",
 };
 
-export default function EditStoryPage() {
+function EditStoryPageContent() {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -91,6 +92,7 @@ export default function EditStoryPage() {
 
       const res = await fetch(`/api/stories/${id}`, {
         method: "PUT",
+        credentials: "include", // Important for sending auth cookie
         body: formData,
       });
 
@@ -163,4 +165,12 @@ export default function EditStoryPage() {
       </div>
     </main>
   );
+}
+
+export default function EditStoryPage() {
+    return (
+        <AdminAuthGuard>
+            <EditStoryPageContent />
+        </AdminAuthGuard>
+    )
 }

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import DeleteModal from "@/components/DeleteModal";
 import { Search, Package, PackageX, DollarSign, FileText, Loader2 } from "lucide-react";
+import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 
 type Product = {
   _id: string;
@@ -17,7 +18,7 @@ type Product = {
 
 type StockStatus = "" | "IN_STOCK" | "OUT_OF_STOCK" | "LOW_STOCK";
 
-export default function ManageProductsPage() {
+function ManageProductsPageContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -174,7 +175,7 @@ export default function ManageProductsPage() {
       {filteredProducts.length === 0 ? (
         <p className="text-gray-400">No se encontraron productos que coincidan con los filtros.</p>
       ) : (
-        <div className="bg-[#111] rounded-lg shadow overflow-hidden">
+        <div className="bg-[#111] rounded-lg shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-white/10">
             <thead className="bg-[#181818]">
               <tr>
@@ -208,4 +209,12 @@ export default function ManageProductsPage() {
       )}
     </div>
   );
+}
+
+export default function ManageProductsPage() {
+  return (
+    <AdminAuthGuard>
+      <ManageProductsPageContent />
+    </AdminAuthGuard>
+  )
 }

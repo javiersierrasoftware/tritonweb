@@ -1,38 +1,24 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import jwt from "jsonwebtoken";
+"use client";
+
+import { useState, useEffect } from "react";
 import CreateStoryForm from "@/components/CreateStoryForm";
+import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 import { ShieldCheck } from "lucide-react";
 
-interface UserPayload {
-  sub: string;
-  email: string;
+interface User {
   name: string;
-  role: string;
+  email: string;
 }
 
-async function getAdminSession(): Promise<UserPayload | null> {
-  const tokenCookie = cookies().get("triton_session_token");
-  if (!tokenCookie) return null;
+function CreateStoryPageContent() {
+  const [user, setUser] = useState<User | null>(null);
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) return null;
-
-  try {
-    const decoded = jwt.verify(tokenCookie.value, secret) as UserPayload;
-    if (decoded.role !== "ADMIN") return null;
-    return decoded;
-  } catch (error) {
-    return null;
-  }
-}
-
-export default async function CreateStoryPage() {
-  const adminUser = await getAdminSession();
-
-  if (!adminUser) {
-    redirect("/login");
-  }
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      setUser(JSON.parse(userStr));
+    }
+  }, []);
 
   return (
     <main className="max-w-2xl mx-auto px-4 pt-24 pb-16 space-y-8">
@@ -43,9 +29,17 @@ export default async function CreateStoryPage() {
       </div>
 
       {/* FORMULARIO */}
-      <CreateStoryForm
-        user={{ name: adminUser.name, email: adminUser.email }}
-      />
+      {user && <CreateStoryForm
+        user={{ name: user.name, email: user.email }}
+      />}
     </main>
   );
+}
+
+export default function CreateStoryPage() {
+    return (
+        <AdminAuthGuard>
+            <CreateStoryPageContent />
+        </AdminAuthGuard>
+    )
 }

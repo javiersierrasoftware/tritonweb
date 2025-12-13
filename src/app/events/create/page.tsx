@@ -1,37 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AthleteCategory, SportType } from "@/types/Event";
+import { Loader2 } from "lucide-react";
 
-interface FormState {
-  name: string;
-  description: string;
-  date: string;
-  time: string;
-  location: string;
-  type: SportType | "";
-  distance: string;
-  distances: string;
-  minAge: string;
-  maxAge: string;
-  price: string;
-  slotsLeft: string;
-  image: string;
-
-  reg1Start: string;
-  reg1End: string;
-  reg2Start: string;
-  reg2End: string;
-  reg3Start: string;
-  reg3End: string;
-  reg1Price: string;
-  reg2Price: string;
-  reg3Price: string;
-
-  category: string[];
-  shirtSizes: string[];
+interface User {
+  role: string;
+  // Add other user properties if needed
 }
+
+// ... (keep the rest of the interfaces and constants)
 
 const INITIAL_STATE: FormState = {
   name: "",
@@ -65,6 +44,7 @@ const INITIAL_STATE: FormState = {
 const SHIRT_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL"];
 const CATEGORY_OPTIONS: AthleteCategory[] = ["Principiante", "Intermedio", "Avanzado", "Elite", "Recreativo"];
 
+
 export default function CreateEventAdminPage() {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [loading, setLoading] = useState(false);
@@ -72,6 +52,22 @@ export default function CreateEventAdminPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const router = useRouter();
+
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user: User = JSON.parse(userStr);
+      if (user.role !== "ADMIN") {
+        router.replace("/login");
+      } else {
+        setIsCheckingAuth(false);
+      }
+    } else {
+      router.replace("/login");
+    }
+  }, [router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -179,6 +175,7 @@ export default function CreateEventAdminPage() {
 
       const res = await fetch("/api/events/admin", {
         method: "POST",
+        credentials: "include", // <<< Importante para enviar la cookie de sesión
         body: formData,
       });
 
@@ -202,6 +199,15 @@ export default function CreateEventAdminPage() {
       setLoading(false);
     }
   };
+  
+  if (isCheckingAuth) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-cyan-400" />
+        <p className="mt-4 text-gray-400">Verificando autorización...</p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen pb-20">
@@ -433,7 +439,7 @@ export default function CreateEventAdminPage() {
                   name="price"
                   value={form.price}
                   onChange={handleChange}
-                  placeholder="Ej: $120.000"
+                  placeholder="Ej: 20.000"
                   className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm"
                 />
               </div>
@@ -497,7 +503,7 @@ export default function CreateEventAdminPage() {
                 </label>
                 <label className="block text-gray-300">
                   Precio
-                  <input type="text" name="reg1Price" value={form.reg1Price} onChange={handleChange} placeholder="$100.000" className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-2 py-1" />
+                  <input type="text" name="reg1Price" value={form.reg1Price} onChange={handleChange} placeholder="00.000" className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-2 py-1" />
                 </label>
               </div>
 
@@ -525,7 +531,7 @@ export default function CreateEventAdminPage() {
                 </label>
                 <label className="block text-gray-300">
                   Precio
-                  <input type="text" name="reg2Price" value={form.reg2Price} onChange={handleChange} placeholder="$120.000" className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-2 py-1" />
+                  <input type="text" name="reg2Price" value={form.reg2Price} onChange={handleChange} placeholder="20.000" className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-2 py-1" />
                 </label>
               </div>
 
@@ -553,7 +559,7 @@ export default function CreateEventAdminPage() {
                 </label>
                 <label className="block text-gray-300">
                   Precio
-                  <input type="text" name="reg3Price" value={form.reg3Price} onChange={handleChange} placeholder="$150.000" className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-2 py-1" />
+                  <input type="text" name="reg3Price" value={form.reg3Price} onChange={handleChange} placeholder="50.000" className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-2 py-1" />
                 </label>
               </div>
             </div>

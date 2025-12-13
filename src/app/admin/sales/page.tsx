@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { DollarSign, ShoppingCart, BarChart2, Package, Search, FileText, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 
 type OrderItem = {
   productId: string;
@@ -39,7 +40,7 @@ const months = [
   { value: 11, name: "Noviembre" }, { value: 12, name: "Diciembre" },
 ];
 
-export default function SalesPage() {
+function SalesPageContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -312,11 +313,11 @@ export default function SalesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${order.totalAmount.toLocaleString('es-CO')}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${ 
                                               order.status === 'PAID' || order.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
                                               order.status === 'PENDING_PAYMENT' ? 'bg-yellow-100 text-yellow-800' :
                                               'bg-red-100 text-red-800'
-                                            }`}>
+                                            }`}> 
                                               {order.status}
                                             </span>
                                           </td>
@@ -339,4 +340,12 @@ export default function SalesPage() {
       )}
     </main>
   );
+}
+
+export default function SalesPage() {
+  return (
+    <AdminAuthGuard>
+      <SalesPageContent />
+    </AdminAuthGuard>
+  )
 }

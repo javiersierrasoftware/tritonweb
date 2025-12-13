@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageUp } from "lucide-react";
+import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 
-export default function CreateProductPage() {
+function CreateProductPageContent() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -165,4 +166,12 @@ export default function CreateProductPage() {
       </form>
     </div>
   );
+}
+
+export default function CreateProductPage() {
+    return (
+        <AdminAuthGuard>
+            <CreateProductPageContent />
+        </AdminAuthGuard>
+    )
 }

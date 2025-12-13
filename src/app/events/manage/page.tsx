@@ -1,6 +1,9 @@
-import ManageEvents from "@/components/events/ManageEvents";
+"use client";
 
-export default function ManageEventsPage() {
+import ManageEvents from "@/components/events/ManageEvents";
+import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
+
+function ManageEventsPageContent() {
   return (
     <main className="max-w-6xl mx-auto px-4 pt-28 pb-16 space-y-8">
       <header>
@@ -13,4 +16,12 @@ export default function ManageEventsPage() {
       <ManageEvents />
     </main>
   );
+}
+
+export default function ManageEventsPage() {
+    return (
+        <AdminAuthGuard>
+            <ManageEventsPageContent />
+        </AdminAuthGuard>
+    )
 }
