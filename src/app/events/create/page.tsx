@@ -12,6 +12,35 @@ interface User {
 
 // ... (keep the rest of the interfaces and constants)
 
+interface FormState {
+  name: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  type: string;
+  distance: string;
+  distances: string;
+  minAge: string;
+  maxAge: string;
+  price: string;
+  slotsLeft: string;
+  image: string;
+
+  reg1Start: string;
+  reg1End: string;
+  reg2Start: string;
+  reg2End: string;
+  reg3Start: string;
+  reg3End: string;
+  reg1Price: string;
+  reg2Price: string;
+  reg3Price: string;
+
+  category: AthleteCategory[];
+  shirtSizes: string[];
+}
+
 const INITIAL_STATE: FormState = {
   name: "",
   description: "",
@@ -128,27 +157,27 @@ export default function CreateEventAdminPage() {
       const registrationPeriods = [
         form.reg1Start && form.reg1End
           ? {
-              label: "Preventa",
-              startDate: form.reg1Start,
-              endDate: form.reg1End,
-              price: form.reg1Price,
-            }
+            label: "Preventa",
+            startDate: form.reg1Start,
+            endDate: form.reg1End,
+            price: form.reg1Price,
+          }
           : null,
         form.reg2Start && form.reg2End
           ? {
-              label: "Inscripción regular",
-              startDate: form.reg2Start,
-              endDate: form.reg2End,
-              price: form.reg2Price,
-            }
+            label: "Inscripción regular",
+            startDate: form.reg2Start,
+            endDate: form.reg2End,
+            price: form.reg2Price,
+          }
           : null,
         form.reg3Start && form.reg3End
           ? {
-              label: "Inscripción tardía",
-              startDate: form.reg3Start,
-              endDate: form.reg3End,
-              price: form.reg3Price,
-            }
+            label: "Inscripción tardía",
+            startDate: form.reg3Start,
+            endDate: form.reg3End,
+            price: form.reg3Price,
+          }
           : null,
       ].filter(Boolean);
 
@@ -199,7 +228,7 @@ export default function CreateEventAdminPage() {
       setLoading(false);
     }
   };
-  
+
   if (isCheckingAuth) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center">
@@ -362,11 +391,10 @@ export default function CreateEventAdminPage() {
                         key={cat}
                         type="button"
                         onClick={() => toggleCategory(cat)}
-                        className={`px-3 py-1 rounded-full border text-xs ${
-                          active
+                        className={`px-3 py-1 rounded-full border text-xs ${active
                             ? "bg-cyan-300 text-black border-cyan-300"
                             : "border-white/20 text-gray-200 bg-white/5"
-                        }`}
+                          }`}
                       >
                         {cat}
                       </button>
@@ -411,11 +439,10 @@ export default function CreateEventAdminPage() {
                       key={size}
                       type="button"
                       onClick={() => toggleShirtSize(size)}
-                      className={`px-3 py-1 rounded-full border text-xs ${
-                        active
+                      className={`px-3 py-1 rounded-full border text-xs ${active
                           ? "bg-cyan-300 text-black border-cyan-300"
                           : "border-white/20 text-gray-200 bg-white/5"
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
