@@ -30,13 +30,13 @@ export default function Footer() {
         {/* CREDITO */}
         <div className="text-gray-400 text-sm">
           <p>Diseñado y desarrollado por</p>
-          <p className="font-semibold text-white">CREATIX S.A.S.</p>
+          <p className="font-semibold text-white">TICSOFT S.A.S.</p>
           <Link
-            href="https://www.crea-tix.com"
+            href="https://www.ticsoft.co"
             target="_blank"
             className="hover:text-cyan-300 transition text-sm"
           >
-            www.crea-tix.com
+            www.ticsoft.co
           </Link>
         </div>
       </div>

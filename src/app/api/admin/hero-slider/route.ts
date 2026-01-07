@@ -33,11 +33,6 @@ async function authenticateAdmin() {
 
 export async function GET() {
   try {
-    const admin = await authenticateAdmin();
-    if (!admin) {
-      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
-    }
-
     await connectDB();
     const slides = await HeroSlide.find({}).sort({ order: 1 });
     return NextResponse.json(slides);
