@@ -1,15 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // Added useSearchParams
 import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/perfil"; // Get callbackUrl or default
 
-  // 🔥 MANEJO COMPLETO DEL LOGIN
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -20,33 +23,29 @@ export default function LoginPage() {
       const email = String(formData.get("email") || "");
       const password = String(formData.get("password") || "");
 
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+        callbackUrl,
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || "No se pudo iniciar sesión.");
+      if (res?.error) {
+        throw new Error("Credenciales inválidas. Verifica tu correo y contraseña.");
       }
 
-      const data = await res.json();
+      if (res?.ok) {
+        // 🔥 Notificar al Navbar que debe actualizarse (NextAuth handles this, but keeping event dispatch just in case legacy listeners need it temporarily)
+        window.dispatchEvent(new Event("storage"));
 
-      // ================================
-      // 🔥 GUARDAR TOKEN Y USER EN LOCALSTORAGE
-      // ================================
-      // El token se maneja con una cookie httpOnly, no es necesario guardarlo en localStorage
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      // 🔥 Notificar al Navbar que debe actualizarse
-      window.dispatchEvent(new Event("storage"));
-
-      // 🔥 Redirigir al dashboard
-      router.push("/perfil");
+        router.push(callbackUrl);
+        router.refresh(); // Ensure session is updated
+      }
 
     } catch (err: any) {
+      console.error(err);
       setErrorMsg(err.message || "Error inesperado al iniciar sesión.");
+      toast.error(err.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -55,7 +54,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-black text-white pt-28 pb-20 px-6">
       <div className="max-w-lg mx-auto bg-[#111] border border-white/10 rounded-2xl p-10 space-y-6">
-        
+
         {/* TÍTULO */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Inicia sesión</h1>

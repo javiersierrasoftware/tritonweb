@@ -1,34 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, User, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { data: session, status } = useSession();
+  const user = session?.user;
 
-  // Leer usuario guardado en localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (!stored) {
+    if (status === "unauthenticated") {
       router.push("/login");
-      return;
     }
-    setUser(JSON.parse(stored));
-  }, [router]);
+  }, [status, router]);
 
   const logout = async () => {
-    // Limpiar localStorage
-    localStorage.removeItem("user");
-
-    // Llamar a la API de logout para que borre la cookie httpOnly
-    await fetch("/api/auth/logout", { method: "POST" });
-
-    // Notificar a otros componentes (como el Navbar) que la sesión ha cambiado
-    window.dispatchEvent(new Event("storage"));
-    router.push("/");
+    await signOut({ callbackUrl: "/" });
   };
 
   if (!user) return null;

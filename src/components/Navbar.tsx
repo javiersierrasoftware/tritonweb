@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Menu, X, ShoppingCart, ChevronDown } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 
 type UserSession = {
   name?: string;
@@ -18,8 +19,10 @@ type AdminSection = "historias" | "eventos" | "tienda" | "hero" | null;
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState<UserSession>(null);
   const [adminOpen, setAdminOpen] = useState<AdminSection>(null);
+
+  const { data: session } = useSession();
+  const user = session?.user as UserSession | undefined;
 
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -30,20 +33,6 @@ export default function Navbar() {
   const toggleCart = useCartStore((state) => state.toggleCart);
   const items = useCartStore((state) => state.items);
   const totalItems = items.reduce((acc, item) => acc + item.qty, 0);
-
-  /* ------------------------- LEER SESIÓN ------------------------- */
-  useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
-
-    const syncLogout = () => {
-      const updated = localStorage.getItem("user");
-      setUser(updated ? JSON.parse(updated) : null);
-    };
-
-    window.addEventListener("storage", syncLogout);
-    return () => window.removeEventListener("storage", syncLogout);
-  }, []);
 
   /* ---------------------- CERRAR MENÚ CLICK AFUERA (DESKTOP PERFIL) ---------------------- */
   useEffect(() => {
@@ -68,14 +57,11 @@ export default function Navbar() {
   }, [mobileOpen]);
 
   /* ------------------------- LOGOUT ------------------------- */
-  const handleLogout = () => {
-    document.cookie = "token=; path=/; max-age=0;";
-    localStorage.removeItem("user");
-    setUser(null);
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/login" });
     setMenuOpen(false);
     setMobileOpen(false);
     setAdminOpen(null);
-    router.push("/login");
   };
 
   const closeMobile = () => {
@@ -272,9 +258,8 @@ export default function Navbar() {
 
       {/* DRAWER MOBILE */}
       <div
-        className={`fixed top-0 right-0 w-80 max-w-[88vw] h-dvh bg-[#0b0b0b]/95 backdrop-blur-xl border-l border-gray-800 shadow-2xl transform transition-transform duration-300 z-[60] md:hidden ${
-          mobileOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 w-80 max-w-[88vw] h-dvh bg-[#0b0b0b]/95 backdrop-blur-xl border-l border-gray-800 shadow-2xl transform transition-transform duration-300 z-[60] md:hidden ${mobileOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="flex justify-between items-center p-5 border-b border-gray-800">
           <span className="text-lg font-bold text-white">Menú</span>

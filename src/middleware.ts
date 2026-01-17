@@ -1,14 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
-
-const getSecretKey = () => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("JWT Secret key is not set in environment variables!");
-  }
-  return new TextEncoder().encode(secret);
-};
+import { getToken } from "next-auth/jwt";
 
 // Rutas de ADMIN
 const adminRoutes = [
@@ -25,7 +17,6 @@ const adminRoutes = [
 const protectedRoutes = ["/dashboard", "/perfil"];
 
 export async function middleware(req: NextRequest) {
-  const token = req.cookies.get("triton_session_token")?.value;
   const { pathname } = req.nextUrl;
 
   const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
@@ -38,33 +29,31 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Verificar el token usando NextAuth
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+  console.log("Middleware checking path:", pathname);
+  console.log("Token found:", token ? "YES" : "NO");
+  if (token) {
+    console.log("Token role:", token.role);
+  }
+
   // Si no hay token, redirigir a login
   if (!token) {
+    console.log("Redirecting to login...");
     const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("next", pathname);
+    loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Verificar el token
-  try {
-    const { payload } = await jwtVerify(token, await getSecretKey());
-
-    // Si es ruta de Admin, verificar el rol
-    if (isAdminRoute && payload.role !== "ADMIN") {
-      // Si no es admin, redirigir al dashboard
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-
-    // Si el token es válido y tiene el rol correcto (o no es ruta de admin), continuar
-    return NextResponse.next();
-
-  } catch (err) {
-    // Si el token es inválido/expirado, redirigir a login y borrar cookie
-    const loginUrl = new URL("/login", req.url);
-    const response = NextResponse.redirect(loginUrl);
-    response.cookies.delete("triton_session_token");
-    return response;
+  // Si es ruta de Admin, verificar el rol
+  if (isAdminRoute && token.role !== "ADMIN") {
+    // Si no es admin, redirigir al dashboard
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
+
+  // Si el token es válido y tiene el rol correcto (o no es ruta de admin), continuar
+  return NextResponse.next();
 }
 
 export const config = {
