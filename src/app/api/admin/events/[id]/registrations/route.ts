@@ -1,10 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
+
 import { connectDB } from "@/lib/mongodb";
 import Registration from "@/models/Registration";
-import User from "@/models/User"; // Import the User model
 import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
 import { isValidObjectId } from "mongoose";
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 
 interface DecodedToken {
   id: string;
@@ -20,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (!tokenCookie) {
       return NextResponse.json({ message: "Unauthorized. Token not found." }, { status: 401 });
     }
-    
+
     const token = jwt.verify(tokenCookie.value, process.env.JWT_SECRET!) as DecodedToken;
     if (!token || token.role !== "ADMIN") {
       return NextResponse.json({ message: "Forbidden. Not an admin." }, { status: 403 });
@@ -31,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (!isValidObjectId(eventId)) {
       return NextResponse.json({ message: "Invalid event ID." }, { status: 400 });
     }
-    
+
     await connectDB();
 
     // 3. Fetch Registrations for the Event
