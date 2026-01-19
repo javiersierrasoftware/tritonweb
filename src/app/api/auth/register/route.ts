@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
+import { sendWelcomeEmail } from "@/lib/mail";
 
 export async function POST(req: Request) {
   try {
@@ -33,6 +34,9 @@ export async function POST(req: Request) {
       discipline: discipline || null,
       goal: goal || null,
     });
+
+    // Enviar correo de bienvenida (no bloqueante)
+    sendWelcomeEmail(email, name).catch(console.error);
 
     return NextResponse.json(
       { message: "Usuario registrado correctamente", userId: newUser._id },

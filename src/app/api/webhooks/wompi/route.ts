@@ -11,7 +11,8 @@ export async function POST(request: Request) {
   }
 
   const rawBody = await request.text();
-  const wompiSignature = headers().get("X-Wompi-Signature");
+  const headersList = await headers();
+  const wompiSignature = headersList.get("X-Wompi-Signature");
 
   if (!wompiSignature) {
     console.error("Missing X-Wompi-Signature header.");
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     console.error("Webhook signature verification failed.");
     return NextResponse.json({ message: "Invalid signature." }, { status: 401 });
   }
-  
+
   let eventPayload;
   try {
     eventPayload = JSON.parse(rawBody);
@@ -42,11 +43,11 @@ export async function POST(request: Request) {
     console.error("Wompi Webhook: Invalid event data - missing transaction or reference.");
     return NextResponse.json({ message: "Invalid event data." }, { status: 400 });
   }
-  
+
   const reference = transaction.reference;
   const status = transaction.status;
   const transactionId = transaction.id;
-  
+
   try {
     if (reference.startsWith("reg_")) {
       await handleRegistration(reference.substring(4), status, transactionId);
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     } else {
       console.warn(`Webhook received with unknown reference prefix: ${reference}`);
     }
-    
+
     return NextResponse.json({ message: "Webhook processed successfully." }, { status: 200 });
 
   } catch (error: any) {

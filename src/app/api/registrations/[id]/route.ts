@@ -3,10 +3,10 @@ import { connectDB } from "@/lib/mongodb";
 import Registration from "@/models/Registration";
 import { isValidObjectId } from "mongoose";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await connectDB();
 
-  const { id } = params;
+  const { id } = await params;
 
   if (!isValidObjectId(id)) {
     return NextResponse.json({ message: "Invalid registration ID." }, { status: 400 });
@@ -14,7 +14,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
   try {
     const registration = await Registration.findById(id).select("status event");
-    
+
     if (!registration) {
       return NextResponse.json({ message: "Registration not found." }, { status: 404 });
     }

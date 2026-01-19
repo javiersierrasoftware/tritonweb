@@ -1,39 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Event from "@/models/Event";
-import jwt from "jsonwebtoken";
 import cloudinary from "@/lib/cloudinary";
-import { cookies } from "next/headers";
 import { Readable } from "stream";
 
-interface DecodedToken {
-  id: string;
-  role: string;
-  [key: string]: any;
-}
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
     // 1. Proteger la ruta para que solo ADMINS puedan crear eventos
-    const cookieStore = cookies();
-    const tokenCookie = cookieStore.get("triton_session_token");
-    if (!tokenCookie) {
-      return NextResponse.json({ ok: false, message: "No autorizado. Token no encontrado." }, { status: 401 });
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json({ ok: false, message: "No autorizado." }, { status: 401 });
     }
-    
-    const token = jwt.verify(tokenCookie.value, process.env.JWT_SECRET!) as DecodedToken;
-    if (!token || token.role !== "ADMIN") {
-      return NextResponse.json(
-        { ok: false, message: "No autorizado" },
-        { status: 401 }
-      );
-    }
-    
+
     await connectDB();
 
     const formData = await req.formData();
     const file = formData.get("image") as File | null;
-    
+
     let imageUrl = "";
     if (file) {
       const bytes = await file.arrayBuffer();
@@ -89,7 +75,7 @@ export async function POST(req: NextRequest) {
       shirtSizes: shirtSizes ? JSON.parse(shirtSizes) : [],
       registrationPeriods: registrationPeriods ? JSON.parse(registrationPeriods) : [],
       image: imageUrl,
-      createdBy: token.id,
+      createdBy: (session.user as any).id,
     });
 
     await newEvent.save();

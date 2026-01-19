@@ -1,45 +1,22 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
-import jwt from "jsonwebtoken";
-import { headers, cookies } from "next/headers";
 import cloudinary from "@/lib/cloudinary";
 import { Readable } from "stream";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = 'force-dynamic';
 
-interface DecodedToken {
-  id: string;
-  role: string;
-  [key: string]: any;
-}
-
-// Helper function to extract token
-function getToken(req: Request) {
-  const cookieStore = cookies();
-  let token = cookieStore.get("triton_session_token")?.value;
-
-  // Fallback to Authorization header if not found in cookie
-  if (!token) {
-    token = headers().get("authorization")?.split(" ")[1];
-  }
-  return token;
-}
-
 export async function GET(req: Request) {
   try {
-    const token = getToken(req);
-    if (!token) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
-
-    const secret = process.env.JWT_SECRET!;
-    const user = jwt.verify(token, secret) as DecodedToken;
-
-    if (user.role !== "ADMIN") {
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
       return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
 
     await connectDB();
-    const products = await Product.find({}).sort({ createdAt: -1 });
+    const products = await Product.find({});
 
     return NextResponse.json(products);
   } catch (error: any) {
@@ -50,13 +27,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const token = getToken(req);
-    if (!token) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
-
-    const secret = process.env.JWT_SECRET!;
-    const user = jwt.verify(token, secret) as DecodedToken;
-
-    if (user.role !== "ADMIN") {
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
       return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
 
@@ -76,27 +48,27 @@ export async function POST(req: Request) {
     let imageUrl: string | undefined;
 
     if (file && file.size > 0) {
-        // ---------------------------------
-        // 3️⃣ SUBIR IMAGEN A CLOUDINARY
-        // ---------------------------------
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+      // ---------------------------------
+      // 3️⃣ SUBIR IMAGEN A CLOUDINARY
+      // ---------------------------------
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
 
-        const result: any = await new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: "triton_products", // Specific folder for products
-              public_id: `${Date.now()}_${file.name}`,
-              resource_type: "image",
-            },
-            (error, result) => {
-              if (error) return reject(error);
-              resolve(result);
-            }
-          );
-          Readable.from(buffer).pipe(uploadStream);
-        });
-        imageUrl = result.secure_url;
+      const result: any = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "triton_products", // Specific folder for products
+            public_id: `${Date.now()}_${file.name}`,
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        Readable.from(buffer).pipe(uploadStream);
+      });
+      imageUrl = result.secure_url;
     }
 
     // Generate slug
@@ -115,7 +87,7 @@ export async function POST(req: Request) {
       price,
       image: imageUrl, // Use the uploaded image URL
       stock,
-      createdBy: user.id,
+      createdBy: (session.user as any).id,
     });
 
     await newProduct.save();

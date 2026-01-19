@@ -15,22 +15,18 @@ interface DecodedToken {
   [key: string]: any;
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    // 1. Authenticate and Authorize Admin
-    const cookieStore = cookies();
-    const tokenCookie = cookieStore.get("triton_session_token");
-    if (!tokenCookie) {
-      return NextResponse.json({ message: "Unauthorized. Token not found." }, { status: 401 });
-    }
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-    const token = jwt.verify(tokenCookie.value, process.env.JWT_SECRET!) as DecodedToken;
-    if (!token || token.role !== "ADMIN") {
-      return NextResponse.json({ message: "Forbidden. Not an admin." }, { status: 403 });
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json({ message: "Acceso denegado" }, { status: 403 });
     }
 
     // 2. Validate Event ID
-    const eventId = params.id;
+    const { id: eventId } = await params;
     if (!isValidObjectId(eventId)) {
       return NextResponse.json({ message: "Invalid event ID." }, { status: 400 });
     }

@@ -4,32 +4,17 @@ export const revalidate = 0;
 
 import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-interface DecodedToken {
-  id: string;
-  role: string;
-  [key: string]: any;
-}
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
     // 1. Authenticate and Authorize Admin
-    const cookieStore = cookies();
-    const tokenCookie = cookieStore.get("triton_session_token");
-    if (!tokenCookie) {
-      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
-    }
-
-    const token = jwt.verify(
-      tokenCookie.value,
-      process.env.JWT_SECRET!
-    ) as DecodedToken;
-
-    if (!token || token.role !== "ADMIN") {
-      return NextResponse.json({ message: "Acceso denegado" }, { status: 403 });
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
 
     await connectDB();
@@ -70,9 +55,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(orders, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching orders:", error);
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
-      return NextResponse.json({ message: "Token inválido o expirado" }, { status: 401 });
-    }
     return NextResponse.json(
       { message: "Error interno del servidor", error: error.message },
       { status: 500 }

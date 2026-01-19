@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { connectDB } from '@/lib/mongodb';
 import HeroSlide from '@/models/HeroSlide';
 import cloudinary from "@/lib/cloudinary";
@@ -14,24 +16,15 @@ interface DecodedToken {
 
 // Helper function for authentication
 async function authenticateAdmin() {
-  const cookieStore = cookies();
-  const tokenCookie = cookieStore.get("triton_session_token");
-  if (!tokenCookie) {
-    return null;
+  const session = await getServerSession(authOptions);
+
+  if (session?.user?.role === "ADMIN") {
+    return session.user;
   }
-  
-  try {
-    const token = jwt.verify(tokenCookie.value, process.env.JWT_SECRET!) as DecodedToken;
-    if (token && token.role === "ADMIN") {
-      return token;
-    }
-    return null;
-  } catch (error) {
-    return null;
-  }
+  return null;
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = await authenticateAdmin();
     if (!admin) {
@@ -39,7 +32,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
 
     const formData = await request.formData();
     const title = formData.get('title') as string | null;
@@ -75,7 +68,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       imageUrl = uploadResult.secure_url;
 
       if (!imageUrl) {
-          return NextResponse.json({ message: "Fallo al subir la imagen" }, { status: 500 });
+        return NextResponse.json({ message: "Fallo al subir la imagen" }, { status: 500 });
       }
     }
 
@@ -87,7 +80,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (imageUrl) updateData.image = imageUrl;
 
     if (Object.keys(updateData).length === 0) {
-        return NextResponse.json({ message: "No se proporcionaron campos para actualizar" }, { status: 400 });
+      return NextResponse.json({ message: "No se proporcionaron campos para actualizar" }, { status: 400 });
     }
 
     const updatedSlide = await HeroSlide.findByIdAndUpdate(id, updateData, { new: true });
@@ -103,7 +96,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = await authenticateAdmin();
     if (!admin) {
@@ -111,7 +104,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     }
 
     await connectDB();
-    const { id } = params;
+    const { id } = await params;
     const deletedSlide = await HeroSlide.findByIdAndDelete(id);
 
     if (!deletedSlide) {

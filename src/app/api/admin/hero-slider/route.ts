@@ -12,23 +12,17 @@ interface DecodedToken {
   [key: string]: any;
 }
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
 // Helper function for authentication
 async function authenticateAdmin() {
-  const cookieStore = cookies();
-  const tokenCookie = cookieStore.get("triton_session_token");
-  if (!tokenCookie) {
-    return null;
+  const session = await getServerSession(authOptions);
+
+  if (session?.user?.role === "ADMIN") {
+    return session.user;
   }
-  
-  try {
-    const token = jwt.verify(tokenCookie.value, process.env.JWT_SECRET!) as DecodedToken;
-    if (token && token.role === "ADMIN") {
-      return token;
-    }
-    return null;
-  } catch (error) {
-    return null;
-  }
+  return null;
 }
 
 export async function GET() {
@@ -84,11 +78,11 @@ export async function POST(request: Request) {
       );
       uploadStream.end(buffer);
     }) as { secure_url: string };
-    
+
     const imageUrl = uploadResult.secure_url;
 
     if (!imageUrl) {
-        return NextResponse.json({ message: "Fallo al subir la imagen" }, { status: 500 });
+      return NextResponse.json({ message: "Fallo al subir la imagen" }, { status: 500 });
     }
 
     const newSlide = await HeroSlide.create({

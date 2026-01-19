@@ -8,9 +8,9 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
 interface RegisterPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 interface DecodedToken {
@@ -21,7 +21,7 @@ interface DecodedToken {
 }
 
 async function getUserFromCookie() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const tokenCookie = cookieStore.get("triton_session_token");
 
   if (tokenCookie) {
@@ -62,25 +62,26 @@ async function getEvent(id: string) {
 
 // Helper to find the current price (frontend version)
 function getFrontendCalculatedPrice(event: any): number {
-    const now = new Date();
-    
-    if (event.registrationPeriods && event.registrationPeriods.length > 0) {
-        for (const period of event.registrationPeriods) {
-            const startDate = new Date(period.startDate);
-            const endDate = new Date(period.endDate);
-            if (now >= startDate && now <= endDate) {
-                return (period.price || 0); // Return price as a number, not cents
-            }
-        }
+  const now = new Date();
+
+  if (event.registrationPeriods && event.registrationPeriods.length > 0) {
+    for (const period of event.registrationPeriods) {
+      const startDate = new Date(period.startDate);
+      const endDate = new Date(period.endDate);
+      if (now >= startDate && now <= endDate) {
+        return (period.price || 0); // Return price as a number, not cents
+      }
     }
-    
-    // Fallback to the main event price if no period matches
-    return (event.price || 0); // Return price as a number
+  }
+
+  // Fallback to the main event price if no period matches
+  return (event.price || 0); // Return price as a number
 }
 
 
 export default async function RegisterPage({ params }: RegisterPageProps) {
-  const event = await getEvent(params.id);
+  const { id } = await params;
+  const event = await getEvent(id);
   const user = await getUserFromCookie();
 
   if (!event) {
@@ -103,14 +104,14 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
         </div>
 
         <div className="bg-gray-800/50 rounded-lg p-6 flex flex-col">
-            <div className="relative w-full h-64 mb-4">
-                <Image
-                    src={event.image || "/event-placeholder.jpg"}
-                    alt={event.name}
-                    fill
-                    className="object-cover rounded-lg"
-                />
-            </div>
+          <div className="relative w-full h-64 mb-4">
+            <Image
+              src={event.image || "/event-placeholder.jpg"}
+              alt={event.name}
+              fill
+              className="object-cover rounded-lg"
+            />
+          </div>
           <h3 className="text-xl font-bold">{event.name}</h3>
           <p className="text-gray-400">{event.location}</p>
           <div className="flex-grow"></div>

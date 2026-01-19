@@ -5,20 +5,14 @@ import CreateStoryForm from "@/components/CreateStoryForm";
 import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 import { ShieldCheck } from "lucide-react";
 
-interface User {
-  name: string;
-  email: string;
-}
+import { useSession } from "next-auth/react";
 
 function CreateStoryPageContent() {
-  const [user, setUser] = useState<User | null>(null);
+  const { data: session } = useSession();
+  const user = session?.user;
 
-  useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      setUser(JSON.parse(userStr));
-    }
-  }, []);
+  // Render form only if user exists (AuthGuard ensures they are admin)
+  if (!user) return null;
 
   return (
     <main className="max-w-2xl mx-auto px-4 pt-24 pb-16 space-y-8">
@@ -29,17 +23,17 @@ function CreateStoryPageContent() {
       </div>
 
       {/* FORMULARIO */}
-      {user && <CreateStoryForm
-        user={{ name: user.name, email: user.email }}
-      />}
+      <CreateStoryForm
+        user={{ name: user.name || "Admin", email: user.email || "" }}
+      />
     </main>
   );
 }
 
 export default function CreateStoryPage() {
-    return (
-        <AdminAuthGuard>
-            <CreateStoryPageContent />
-        </AdminAuthGuard>
-    )
+  return (
+    <AdminAuthGuard>
+      <CreateStoryPageContent />
+    </AdminAuthGuard>
+  )
 }

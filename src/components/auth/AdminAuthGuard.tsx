@@ -2,32 +2,34 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 
 export default function AdminAuthGuard({ children }: { children: React.ReactNode }) {
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    try {
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.role === "ADMIN") {
-          setIsAuthorized(true);
-        } else {
-          router.replace("/login"); // Or a '/unauthorized' page
-        }
-      } else {
-        router.replace("/login");
-      }
-    } catch (error) {
-        console.error("Failed to parse user from localStorage", error);
-        router.replace("/login");
-    }
-  }, [router]);
+    console.log("🛡️ [AuthGuard] Status:", status);
+    if (status === "loading") return;
 
-  if (!isAuthorized) {
+    const user = session?.user;
+    console.log("🛡️ [AuthGuard] User:", user);
+    console.log("🛡️ [AuthGuard] Role:", user?.role);
+
+    // Normalized role check
+    if (status === "authenticated" && user?.role?.toUpperCase() === "ADMIN") {
+      console.log("✅ [AuthGuard] Authorized!");
+      setIsAuthorized(true);
+    } else if (status === "unauthenticated" || (user && user.role?.toUpperCase() !== "ADMIN")) {
+      console.log("⛔ [AuthGuard] UNAUTHORIZED. Redirecting to login.");
+      router.replace("/login");
+    }
+  }, [status, session, router]);
+
+  // Show loader while loading OR while waiting for authorization (to prevent flash of content)
+  if (status === "loading" || !isAuthorized) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-black text-white">
         <Loader2 className="h-12 w-12 animate-spin text-cyan-400" />

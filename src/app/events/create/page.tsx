@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AthleteCategory, SportType } from "@/types/Event";
 import { Loader2 } from "lucide-react";
+import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 
 interface User {
   role: string;
@@ -74,29 +75,13 @@ const SHIRT_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL"];
 const CATEGORY_OPTIONS: AthleteCategory[] = ["Principiante", "Intermedio", "Avanzado", "Elite", "Recreativo"];
 
 
-export default function CreateEventAdminPage() {
+function CreateEventAdminPageContent() {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const router = useRouter();
-
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      const user: User = JSON.parse(userStr);
-      if (user.role !== "ADMIN") {
-        router.replace("/login");
-      } else {
-        setIsCheckingAuth(false);
-      }
-    } else {
-      router.replace("/login");
-    }
-  }, [router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -228,15 +213,6 @@ export default function CreateEventAdminPage() {
       setLoading(false);
     }
   };
-
-  if (isCheckingAuth) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-cyan-400" />
-        <p className="mt-4 text-gray-400">Verificando autorización...</p>
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen pb-20">
@@ -392,8 +368,8 @@ export default function CreateEventAdminPage() {
                         type="button"
                         onClick={() => toggleCategory(cat)}
                         className={`px-3 py-1 rounded-full border text-xs ${active
-                            ? "bg-cyan-300 text-black border-cyan-300"
-                            : "border-white/20 text-gray-200 bg-white/5"
+                          ? "bg-cyan-300 text-black border-cyan-300"
+                          : "border-white/20 text-gray-200 bg-white/5"
                           }`}
                       >
                         {cat}
@@ -440,8 +416,8 @@ export default function CreateEventAdminPage() {
                       type="button"
                       onClick={() => toggleShirtSize(size)}
                       className={`px-3 py-1 rounded-full border text-xs ${active
-                          ? "bg-cyan-300 text-black border-cyan-300"
-                          : "border-white/20 text-gray-200 bg-white/5"
+                        ? "bg-cyan-300 text-black border-cyan-300"
+                        : "border-white/20 text-gray-200 bg-white/5"
                         }`}
                     >
                       {size}
@@ -617,5 +593,13 @@ export default function CreateEventAdminPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function CreateEventAdminPage() {
+  return (
+    <AdminAuthGuard>
+      <CreateEventAdminPageContent />
+    </AdminAuthGuard>
   );
 }

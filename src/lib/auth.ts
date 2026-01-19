@@ -51,7 +51,7 @@ export const authOptions: NextAuthOptions = {
           id: userFound._id.toString(),
           name: userFound.name,
           email: userFound.email,
-          role: userFound.role,
+          role: userFound.role ? userFound.role.toUpperCase() : "USER",
         };
       },
     }),
@@ -59,19 +59,25 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log("🎫 [NextAuth] JWT Callback - User login:", user.email, "Role:", user.role);
         token.id = user.id;
         token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
+      console.log("🎫 [NextAuth] Session Callback - Token Role:", token.role);
       session.user.id = token.id;
       session.user.role = token.role;
       return session;
     },
   },
+  session: {
+    strategy: "jwt",
+  },
   pages: {
     signIn: "/login",
   },
+  debug: true, // Enable debug logs to see internal NextAuth process
   secret: process.env.NEXTAUTH_SECRET,
 };

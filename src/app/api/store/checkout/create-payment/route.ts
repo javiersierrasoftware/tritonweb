@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
@@ -15,19 +15,19 @@ interface DecodedToken {
 }
 
 // Helper function to extract token (similar to other API routes)
-function getToken() {
-  const cookieStore = cookies();
+async function getToken() {
+  const cookieStore = await cookies();
   let token = cookieStore.get("triton_session_token")?.value;
   // For API routes, if client sends Authorization header, it might override cookie.
   // Not directly relevant here as CheckoutForm doesn't send it.
   return token;
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   await connectDB();
 
   try {
-    const { name, email, cedula, address, phoneNumber, cartItems, totalAmount } = await request.json();
+    const { name, email, cedula, address, phoneNumber, cartItems, totalAmount } = await req.json();
 
     // --- Data Validation ---
     if (!name || !email || !cedula || !address || !phoneNumber || !cartItems || cartItems.length === 0 || totalAmount === undefined) {
@@ -69,25 +69,25 @@ export async function POST(request: Request) {
     if (calculatedTotal !== totalAmount) {
       return NextResponse.json({ message: "El total del carrito no coincide con el calculado en el servidor." }, { status: 400 });
     }
-    
+
     // --- User context (optional, if logged in) ---
     let userId: string | undefined;
-    const token = getToken();
+    const token = await getToken();
     if (token) {
-        try {
-            const secret = process.env.JWT_SECRET!;
-            const userPayload = jwt.verify(token, secret) as DecodedToken;
+      try {
+        const secret = process.env.JWT_SECRET!;
+        const userPayload = jwt.verify(token, secret) as unknown as DecodedToken;
 
-            // Prevent admins from making purchases
-            if (userPayload.role === 'ADMIN') {
-                return NextResponse.json({ message: "Los administradores no pueden realizar compras." }, { status: 403 });
-            }
-
-            userId = userPayload.id;
-        } catch (error) {
-            // Invalid token, proceed as guest
-            console.warn("Invalid token during checkout, proceeding as guest.");
+        // Prevent admins from making purchases
+        if (userPayload.role === 'ADMIN') {
+          return NextResponse.json({ message: "Los administradores no pueden realizar compras." }, { status: 403 });
         }
+
+        userId = userPayload.id;
+      } catch (error) {
+        // Invalid token, proceed as guest
+        console.warn("Invalid token during checkout, proceeding as guest.");
+      }
     }
 
 
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
     // --- Wompi API Interaction ---
     const wompiPrvKey = process.env.WOMPI_PRV_KEY;
     if (!wompiPrvKey) {
-        throw new Error("Wompi environment variables are not set.");
+      throw new Error("Wompi environment variables are not set.");
     }
 
     const amountInCents = calculatedTotal * 100;
@@ -114,31 +114,31 @@ export async function POST(request: Request) {
     const wompiApiUrl = "https://sandbox.wompi.co/v1/payment_links";
 
     const wompiResponse = await fetch(wompiApiUrl, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${wompiPrvKey}`
-        },
-        body: JSON.stringify({
-            name: `Compra en Tienda TRITON (Orden: ${newOrder._id.toString()})`,
-            description: `Productos: ${itemsForOrder.map(item => item.name).join(', ')}`,
-            single_use: true,
-            collect_shipping: false, // Shipping collected in form, not via Wompi
-            amount_in_cents: amountInCents,
-            currency: "COP",
-            customer_email: email,
-            redirect_url: redirectUrl,
-            // You might want to pass more buyer info if Wompi supports it directly
-            // For example: customer_data: { phone_number: phoneNumber, address: address }
-        })
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${wompiPrvKey}`
+      },
+      body: JSON.stringify({
+        name: `Compra en Tienda TRITON (Orden: ${newOrder._id.toString()})`,
+        description: `Productos: ${itemsForOrder.map(item => item.name).join(', ')}`,
+        single_use: true,
+        collect_shipping: false, // Shipping collected in form, not via Wompi
+        amount_in_cents: amountInCents,
+        currency: "COP",
+        customer_email: email,
+        redirect_url: redirectUrl,
+        // You might want to pass more buyer info if Wompi supports it directly
+        // For example: customer_data: { phone_number: phoneNumber, address: address }
+      })
     });
 
     const wompiData = await wompiResponse.json();
 
     if (!wompiResponse.ok) {
-        console.error("Wompi API Error:", wompiData);
-        await Order.findByIdAndDelete(newOrder._id); // Rollback
-        throw new Error(wompiData.error?.messages?.join(', ') || "Failed to create Wompi payment link.");
+      console.error("Wompi API Error:", wompiData);
+      await Order.findByIdAndDelete(newOrder._id); // Rollback
+      throw new Error(wompiData.error?.messages?.join(', ') || "Failed to create Wompi payment link.");
     }
 
     const checkoutUrl = `https://checkout.wompi.co/l/${wompiData.data.id}`;

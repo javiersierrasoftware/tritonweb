@@ -17,9 +17,9 @@ interface DecodedToken {
 }
 
 interface EventDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 async function getEvent(id: string) {
@@ -33,9 +33,10 @@ async function getEvent(id: string) {
 }
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
-  const event = await getEvent(params.id);
+  const { id } = await params;
+  const event = await getEvent(id);
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const tokenCookie = cookieStore.get("triton_session_token");
   let isAdmin = false;
   let isLoggedIn = false;

@@ -56,7 +56,7 @@ export default function Dashboard() {
       </section>
 
       {/* SECCIÓN DE ADMIN */}
-      {user.role === "ADMIN" && (
+      {user.role?.toUpperCase() === "ADMIN" && (
         <section className="bg-[#111] border border-white/5 rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <ShieldCheck size={30} className="text-orange-300" />

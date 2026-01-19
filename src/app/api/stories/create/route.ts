@@ -1,39 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import cloudinary from "@/lib/cloudinary";
 import Story from "@/models/Story";
 import { Readable } from "stream";
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-interface DecodedToken {
-  id: string;
-  role: string;
-  [key: string]: any;
-}
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   console.log("📥 API /stories/create recibió solicitud");
 
   try {
     // -------------------------
-    // 1️⃣ VERIFICAR SESIÓN DE ADMIN (MÉTODO MANUAL)
+    // 1️⃣ VERIFICAR SESIÓN DE ADMIN
     // -------------------------
-    const cookieStore = cookies();
-    const tokenCookie = cookieStore.get("triton_session_token");
-    
-    if (!tokenCookie) {
-      throw new Error("No se encontró el token de sesión.");
-    }
-
-    const token = jwt.verify(tokenCookie.value, process.env.JWT_SECRET!) as DecodedToken;
-
-    if (!token || token.role !== "ADMIN") {
-      console.log("⛔ Usuario no autorizado o no es admin:", token);
-      return NextResponse.json(
-        { message: "Acceso denegado. Solo ADMIN puede crear historias." },
-        { status: 403 }
-      );
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+      console.log("⛔ Usuario no autorizado o no es admin.");
+      return NextResponse.json({ message: "No autorizado para crear historias." }, { status: 401 });
     }
     console.log("✅ Usuario ADMIN autorizado");
 
@@ -84,7 +67,7 @@ export async function POST(req: Request) {
     // 4️⃣ GUARDAR HISTORIA EN MONGODB
     // -------------------------------------
     await connectDB();
-    
+
     await Story.create({
       title: `${category} de ${user}`, // Título generado a partir de los datos
       content: description,

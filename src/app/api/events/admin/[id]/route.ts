@@ -1,27 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Event from "@/models/Event";
-import jwt from "jsonwebtoken";
 import cloudinary from "@/lib/cloudinary";
-import { cookies } from "next/headers";
 import { Readable } from "stream";
 import { isValidObjectId } from "mongoose";
-
-interface DecodedToken {
-  id: string;
-  role: string;
-  [key: string]: any;
-}
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 // GET: Obtener los datos de un evento para el formulario de edición
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    if (!isValidObjectId(params.id)) {
+    const { id } = await params;
+    if (!isValidObjectId(id)) {
       return NextResponse.json({ ok: false, message: "ID de evento no válido" }, { status: 400 });
     }
 
     await connectDB();
-    const event = await Event.findById(params.id);
+    const event = await Event.findById(id);
 
     if (!event) {
       return NextResponse.json({ ok: false, message: "Evento no encontrado" }, { status: 404 });
@@ -33,28 +29,20 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-// PUT: Actualizar un evento existente
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // 1. Proteger la ruta para que solo ADMINS puedan editar
-    const cookieStore = cookies();
-    const tokenCookie = cookieStore.get("triton_session_token");
-    if (!tokenCookie) throw new Error("Acceso denegado. Token no encontrado.");
-    
-    const token = jwt.verify(tokenCookie.value, process.env.JWT_SECRET!) as DecodedToken;
-    if (!token || token.role !== "ADMIN") {
-      return NextResponse.json({ ok: false, message: "No autorizado" }, { status: 401 });
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
-
-    if (!isValidObjectId(params.id)) {
+    await connectDB();
+    const { id } = await params;
+    if (!isValidObjectId(id)) {
       return NextResponse.json({ ok: false, message: "ID de evento no válido" }, { status: 400 });
     }
-    
-    await connectDB();
 
     const formData = await req.formData();
     const file = formData.get("image") as File | null;
-    
     let imageUrl = formData.get("currentImage") as string || "";
 
     // Si se sube una nueva imagen, procesarla y subirla a Cloudinary
@@ -98,7 +86,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       image: imageUrl,
     };
 
-    const updatedEvent = await Event.findByIdAndUpdate(params.id, updatedData, { new: true });
+    const updatedEvent = await Event.findByIdAndUpdate(id, updatedData, { new: true });
 
     if (!updatedEvent) {
       return NextResponse.json({ ok: false, message: "No se pudo encontrar el evento para actualizar" }, { status: 404 });
@@ -113,24 +101,21 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // DELETE: Eliminar un evento
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // 1. Proteger la ruta para que solo ADMINS puedan eliminar
-    const cookieStore = cookies();
-    const tokenCookie = cookieStore.get("triton_session_token");
-    if (!tokenCookie) throw new Error("Acceso denegado. Token no encontrado.");
-    
-    const token = jwt.verify(tokenCookie.value, process.env.JWT_SECRET!) as DecodedToken;
-    if (!token || token.role !== "ADMIN") {
-      return NextResponse.json({ ok: false, message: "No autorizado" }, { status: 401 });
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
 
-    if (!isValidObjectId(params.id)) {
+    const { id } = await params;
+
+    if (!isValidObjectId(id)) {
       return NextResponse.json({ ok: false, message: "ID de evento no válido" }, { status: 400 });
     }
-    
+
     await connectDB();
-    await Event.findByIdAndDelete(params.id);
+    await Event.findByIdAndDelete(id);
 
     return NextResponse.json({ ok: true, message: "Evento eliminado" });
   } catch (error: any) {

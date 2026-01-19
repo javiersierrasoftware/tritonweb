@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = req.headers.get("cookie")?.split("triton_session_token=")[1];
@@ -25,8 +25,10 @@ export async function PATCH(
     const body = await req.json();
     const { featured } = body;
 
+    const { id } = await params;
+
     await stories.updateOne(
-      { _id: new mongoose.Types.ObjectId(params.id) },
+      { _id: new mongoose.Types.ObjectId(id) },
       { $set: { featured } }
     );
 

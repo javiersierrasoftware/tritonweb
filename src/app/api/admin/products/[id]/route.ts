@@ -1,50 +1,36 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
-import jwt from "jsonwebtoken";
-import { headers, cookies } from "next/headers";
 import { isValidObjectId } from "mongoose";
 import cloudinary from "@/lib/cloudinary"; // Added
 import { Readable } from "stream"; // Added
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = 'force-dynamic';
 
-interface DecodedToken {
-  id: string;
-  role: string;
-  [key: string]: any;
-}
-
 // Helper function to extract token
-function getToken(req: Request) {
-    const cookieStore = cookies();
-    let token = cookieStore.get("triton_session_token")?.value;
-
-    if (!token) {
-      token = headers().get("authorization")?.split(" ")[1];
-    }
-    return token;
+async function checkAdmin() {
+  const session = await getServerSession(authOptions);
+  return session?.user?.role === "ADMIN";
 }
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = getToken(req);
-    if (!token) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
-
-    const secret = process.env.JWT_SECRET!;
-    const user = jwt.verify(token, secret) as DecodedToken;
-
-    if (user.role !== "ADMIN") {
+    const isAdmin = await checkAdmin();
+    if (!isAdmin) {
       return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
 
     await connectDB();
 
-    if (!isValidObjectId(params.id)) {
+    const { id } = await params;
+
+    if (!isValidObjectId(id)) {
       return NextResponse.json({ message: "ID de producto inválido." }, { status: 400 });
     }
 
-    const product = await Product.findById(params.id);
+    const product = await Product.findById(id);
 
     if (!product) {
       return NextResponse.json({ message: "Producto no encontrado." }, { status: 404 });
@@ -57,21 +43,17 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = getToken(req);
-    if (!token) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
-
-    const secret = process.env.JWT_SECRET!;
-    const user = jwt.verify(token, secret) as DecodedToken;
-
-    if (user.role !== "ADMIN") {
+    const isAdmin = await checkAdmin();
+    if (!isAdmin) {
       return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
 
     await connectDB();
+    const { id } = await params;
 
-    if (!isValidObjectId(params.id)) {
+    if (!isValidObjectId(id)) {
       return NextResponse.json({ message: "ID de producto inválido." }, { status: 400 });
     }
 
@@ -87,37 +69,37 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const file = form.get("image") as File | string | null; // Can be File, or string (existing URL), or null
 
     if (!name || isNaN(price) || isNaN(stock)) {
-        return NextResponse.json({ message: "Faltan campos obligatorios (name, price, stock) o son inválidos." }, { status: 400 });
+      return NextResponse.json({ message: "Faltan campos obligatorios (name, price, stock) o son inválidos." }, { status: 400 });
     }
 
     let imageUrl: string | undefined | null = description === '' ? undefined : description; // If description is empty, set to undefined to remove from DB.
 
     if (file && typeof file !== 'string' && file.size > 0) { // If a new file is uploaded
-        // ---------------------------------
-        // 3️⃣ SUBIR IMAGEN A CLOUDINARY
-        // ---------------------------------
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
+      // ---------------------------------
+      // 3️⃣ SUBIR IMAGEN A CLOUDINARY
+      // ---------------------------------
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
 
-        const result: any = await new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: "triton_products",
-              public_id: `${Date.now()}_${(file as File).name}`, // Cast to File if it's a File
-              resource_type: "image",
-            },
-            (error, result) => {
-              if (error) return reject(error);
-              resolve(result);
-            }
-          );
-          Readable.from(buffer).pipe(uploadStream);
-        });
-        imageUrl = result.secure_url;
+      const result: any = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "triton_products",
+            public_id: `${Date.now()}_${(file as File).name}`, // Cast to File if it's a File
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        Readable.from(buffer).pipe(uploadStream);
+      });
+      imageUrl = result.secure_url;
     } else if (typeof file === 'string' && file) { // If 'image' is a string (existing URL)
-        imageUrl = file;
+      imageUrl = file;
     } else if (file === null || (typeof file !== 'string' && file && file.size === 0)) { // If image is explicitly removed or empty file
-        imageUrl = null; // Set to null to remove it from the product
+      imageUrl = null; // Set to null to remove it from the product
     }
     // If image is undefined (not sent), it won't be updated.
 
@@ -128,11 +110,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     // If name is not provided, we won't try to generate a new slug.
     let updatedSlug = undefined;
     if (name) {
-        updatedSlug = name.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
-        const existingProductWithSameSlug = await Product.findOne({ slug: updatedSlug, _id: { $ne: params.id } });
-        if (existingProductWithSameSlug) {
-             return NextResponse.json({ message: "Ya existe otro producto con este nombre (slug)." }, { status: 409 });
-        }
+      updatedSlug = name.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
+      const existingProductWithSameSlug = await Product.findOne({ slug: updatedSlug, _id: { $ne: id } });
+      if (existingProductWithSameSlug) {
+        return NextResponse.json({ message: "Ya existe otro producto con este nombre (slug)." }, { status: 409 });
+      }
     }
 
 
@@ -148,12 +130,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     if (updatedSlug) {
-        updateData.slug = updatedSlug;
+      updateData.slug = updatedSlug;
     }
 
 
     const updatedProduct = await Product.findByIdAndUpdate(
-      params.id,
+      id,
       updateData,
       { new: true, runValidators: true }
     );
@@ -169,25 +151,22 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = getToken(req);
-    if (!token) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
-
-    const secret = process.env.JWT_SECRET!;
-    const user = jwt.verify(token, secret) as DecodedToken;
-
-    if (user.role !== "ADMIN") {
+    const isAdmin = await checkAdmin();
+    if (!isAdmin) {
       return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
 
     await connectDB();
 
-    if (!isValidObjectId(params.id)) {
+    const { id } = await params;
+
+    if (!isValidObjectId(id)) {
       return NextResponse.json({ message: "ID de producto inválido." }, { status: 400 });
     }
 
-    const deletedProduct = await Product.findByIdAndDelete(params.id);
+    const deletedProduct = await Product.findByIdAndDelete(id);
 
     if (!deletedProduct) {
       return NextResponse.json({ message: "Producto no encontrado." }, { status: 404 });
