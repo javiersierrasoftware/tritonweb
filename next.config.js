@@ -2,7 +2,7 @@
 const path = require("path");
 
 const nextConfig = {
-  output: "standalone",
+  // output: "standalone",
   images: {
     unoptimized: true, // ⬅ DESACTIVA OPTIMIZACIÓN (evita crash en Heroku)
     remotePatterns: [
