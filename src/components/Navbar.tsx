@@ -73,8 +73,8 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 w-full bg-black/60 backdrop-blur-xl border-b border-gray-800 z-50">
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
         {/* LOGO */}
-        <Link href="/" className="flex items-center gap-3">
-          <div className="h-10 w-10 relative">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="h-10 w-10 relative transition-transform duration-300 group-hover:scale-110">
             <Image
               src="/tritontransparente.png"
               alt="TRITON Logo"
@@ -82,7 +82,12 @@ export default function Navbar() {
               className="object-contain"
             />
           </div>
-          <span className="text-gray-300 text-sm">TRITON running club</span>
+          <div className="flex flex-col leading-none select-none">
+            <span className="text-white font-black text-xl tracking-wider">TRITON</span>
+            <span className="text-cyan-300 text-[10px] uppercase tracking-[0.2em] font-bold">
+              running club
+            </span>
+          </div>
         </Link>
 
         {/* MENU DESKTOP */}
@@ -224,8 +229,11 @@ export default function Navbar() {
                   >
                     Cerrar sesión
                   </button>
+
                 </div>
+
               )}
+
             </div>
           )}
         </div>

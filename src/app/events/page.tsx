@@ -35,7 +35,17 @@ export default function EventsPage() {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "UTC", // Fix timezone
     });
+  };
+
+  const formatTime = (timeStr?: string) => {
+    if (!timeStr) return "";
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return timeStr;
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const h12 = hours % 12 || 12;
+    return `${h12}:${minutes.toString().padStart(2, "0")} ${ampm}`;
   };
 
   // Filtrar eventos según el término de búsqueda
@@ -97,7 +107,7 @@ export default function EventsPage() {
                     <Calendar size={16} /> {formatDate(event.date)}
                   </span>
                   <span className="flex items-center gap-2">
-                    <Clock size={16} /> {event.time}
+                    <Clock size={16} /> {formatTime(event.time)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-300">

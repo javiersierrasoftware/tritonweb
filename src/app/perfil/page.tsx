@@ -55,6 +55,13 @@ export default function Dashboard() {
         </button>
       </section>
 
+      {/* NUEVAS FUNCIONALIDADES */}
+      <section className="bg-[#111] border border-cyan-500/30 rounded-2xl p-6 text-center">
+        <p className="text-xl text-cyan-300 font-semibold">
+          Próximamente nuevas funcionalidades
+        </p>
+      </section>
+
       {/* SECCIÓN DE ADMIN */}
       {user.role?.toUpperCase() === "ADMIN" && (
         <section className="bg-[#111] border border-white/5 rounded-2xl p-6">

@@ -57,14 +57,45 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     notFound();
   }
 
+  /* ------------------- FORMATEO DE FECHA (UTC) ------------------- */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("es-CO", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "UTC", // Forzar UTC para evitar desfase de día
     });
   };
+
+  /* ------------------- FORMATEO DE HORA (AM/PM) ------------------- */
+  const formatTime = (timeStr?: string) => {
+    if (!timeStr) return "";
+    // Se asume formato "HH:mm" (24h)
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return timeStr;
+
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const h12 = hours % 12 || 12;
+    return `${h12}:${minutes.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  /* ------------------- URL DINÁMICA PARA QR ------------------- */
+  // Priorizar variable de entorno si existe (para forzar dominio en prod o pruebas),
+  // de lo contrario usar headers para detección automática.
+  const { headers } = await import("next/headers");
+  const headersData = await headers();
+
+  let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (!baseUrl || baseUrl.includes("localhost")) {
+    const host = headersData.get("host") || "localhost:3000";
+    const protocol = headersData.get("x-forwarded-proto") || "http";
+    baseUrl = `${protocol}://${host}`;
+  }
+
+  // Si el usuario quiere forzar triton-tri.com en local, debería configurar NEXT_PUBLIC_BASE_URL.
+  // Pero para despliegue automático, la detección por headers es lo más robusto si la var no está.
 
   return (
     <main className="pb-20">
@@ -117,36 +148,39 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           <div className="flex flex-col items-center justify-center gap-2 pt-4 border-t border-white/10">
             <h3 className="text-lg font-semibold text-white">Inscríbete escaneando</h3>
             <p className="text-sm text-gray-400 text-center mb-2">Escanea este código QR para ir al formulario de inscripción.</p>
-            {process.env.NEXT_PUBLIC_BASE_URL && (
+            <div className="p-2 bg-white rounded-xl">
               <QRCode
-                value={`${process.env.NEXT_PUBLIC_BASE_URL}/events/register/${event._id.toString()}`}
-                size={180}
-                level="H"
-
-                fgColor="#000"
-                bgColor="#fff"
-
+                value={`${baseUrl}/events/register/${event._id.toString()}`}
+                size={160}
+                level="M"
               />
-            )}
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
             <Calendar className="text-cyan-300" size={24} />
             <div>
-              <p className="font-bold">{formatDate(event.date.toISOString())}</p>
-              <p className="text-sm text-gray-400">{event.time}</p>
+              <p className="font-bold capitalize">{formatDate(event.date.toISOString())}</p>
+              <p className="text-sm text-gray-400">{formatTime(event.time)}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <MapPin className="text-cyan-300" size={24} />
             <p>{event.location}</p>
           </div>
-          {event.price && (
+
+          {/* PRECIO: Mostrar Gratis si es 0, ocultar si undefined/null */}
+          {event.price !== undefined && event.price !== null && (
             <div className="flex items-center gap-4">
               <Tag className="text-cyan-300" size={24} />
-              <p>{event.price}</p>
+              <p className="font-semibold text-white">
+                {event.price === 0
+                  ? "Gratis"
+                  : `$${event.price.toLocaleString("es-CO")}`}
+              </p>
             </div>
           )}
+
           {event.slotsLeft > 0 && (
             <div className="flex items-center gap-4">
               <Users className="text-cyan-300" size={24} />

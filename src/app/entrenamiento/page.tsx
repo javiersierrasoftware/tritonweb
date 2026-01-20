@@ -19,13 +19,17 @@ export default function EntrenamientoPage() {
         <div className="grid md:grid-cols-2 gap-8">
           <iframe
             className="w-full h-64 rounded-xl border border-white/10"
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            src="https://www.youtube.com/embed/sPgpoHl_Icg?si=kZ8Z4Z4Z4Z4Z4Z4Z" // Added ?si parameter for good measure if needed, or just plain ID
+            title="Training Video 1"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           ></iframe>
 
           <iframe
             className="w-full h-64 rounded-xl border border-white/10"
-            src="https://www.youtube.com/embed/aqz-KE-bpKQ"
+            src="https://www.youtube.com/embed/vVCrlgwrxl4"
+            title="Training Video 2"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           ></iframe>
         </div>

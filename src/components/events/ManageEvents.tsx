@@ -48,6 +48,7 @@ export default function ManageEvents() {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "UTC", // Fix timezone
     });
   };
 

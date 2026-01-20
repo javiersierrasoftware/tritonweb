@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth"; // Assuming you have an auth hook
 import { useCartStore } from "@/store/cartStore";
+import { COLOMBIA_DATA } from "@/data/colombia";
 
 interface CheckoutFormProps {
   onClose: () => void;
@@ -21,6 +22,13 @@ export default function CheckoutForm({ onClose, totalAmount }: CheckoutFormProps
     address: "",
     phoneNumber: "",
   });
+
+  const [shippingMethod, setShippingMethod] = useState<"pickup" | "shipping">("pickup");
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [addressLine, setAddressLine] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -43,10 +51,52 @@ export default function CheckoutForm({ onClose, totalAmount }: CheckoutFormProps
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Handle Department Change
+  const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const deptName = e.target.value;
+    setSelectedDepartment(deptName);
+
+    // Find cities for selected department
+    const deptData = COLOMBIA_DATA.find(d => d.departamento === deptName);
+    setAvailableCities(deptData ? deptData.ciudades : []);
+
+    // Reset city if department changes
+    setSelectedCity("");
+  };
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCity(e.target.value);
+  };
+
+  const handleShippingMethodChange = (method: "pickup" | "shipping") => {
+    setShippingMethod(method);
+    // You might want to clear address fields or keep them depending on UX preference
+    if (method === "pickup") {
+      setAddressLine("");
+      setSelectedDepartment("");
+      setSelectedCity("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    // Validate shipping info manually since we construct the final address
+    if (shippingMethod === "shipping") {
+      if (!selectedDepartment || !selectedCity || !addressLine) {
+        setError("Por favor completa todos los campos de dirección de envío.");
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // Construct final address string
+    let finalAddress = "Acordar entrega por WhatsApp";
+    if (shippingMethod === "shipping") {
+      finalAddress = `${addressLine} - ${selectedCity}, ${selectedDepartment} (Valor de envío no incluido)`;
+    }
 
     try {
       if (items.length === 0) {
@@ -55,6 +105,7 @@ export default function CheckoutForm({ onClose, totalAmount }: CheckoutFormProps
 
       const orderDetails = {
         ...formData,
+        address: finalAddress, // Use our constructed address
         cartItems: items.map(item => ({
           productId: item.productId,
           name: item.name,
@@ -70,7 +121,7 @@ export default function CheckoutForm({ onClose, totalAmount }: CheckoutFormProps
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // <<< ADD THIS LINE
+        credentials: "include",
         body: JSON.stringify(orderDetails),
       });
 
@@ -96,7 +147,7 @@ export default function CheckoutForm({ onClose, totalAmount }: CheckoutFormProps
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-[#111] border border-white/10 rounded-xl p-6 max-w-lg w-full space-y-4">
         <h2 className="text-2xl font-bold mb-4">Datos del Comprador</h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-300">
@@ -143,20 +194,100 @@ export default function CheckoutForm({ onClose, totalAmount }: CheckoutFormProps
             />
           </div>
 
+          {/* MÉTODO DE ENTREGA */}
           <div>
-            <label htmlFor="address" className="block text-sm font-medium text-gray-300">
-              Dirección de envío
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Método de Entrega
             </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
-            />
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => handleShippingMethodChange("pickup")}
+                className={`flex-1 py-2 px-4 rounded-lg border transition ${shippingMethod === "pickup"
+                  ? "bg-cyan-500/20 border-cyan-500 text-cyan-300"
+                  : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"
+                  }`}
+              >
+                Acordar por WhatsApp
+              </button>
+              <button
+                type="button"
+                onClick={() => handleShippingMethodChange("shipping")}
+                className={`flex-1 py-2 px-4 rounded-lg border transition ${shippingMethod === "shipping"
+                  ? "bg-cyan-500/20 border-cyan-500 text-cyan-300"
+                  : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"
+                  }`}
+              >
+                Envío a dirección
+              </button>
+            </div>
           </div>
+
+          {/* CAMPOS DE DIRECCIÓN SI ES ENVÍO */}
+          {shippingMethod === "shipping" && (
+            <div className="space-y-4 border-t border-white/10 pt-4 mt-2">
+              <div>
+                <label htmlFor="department" className="block text-sm font-medium text-gray-300">
+                  Departamento
+                </label>
+                <select
+                  id="department"
+                  value={selectedDepartment}
+                  onChange={handleDepartmentChange}
+                  className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
+                >
+                  <option value="">Selecciona un departamento</option>
+                  {COLOMBIA_DATA.map((dept) => (
+                    <option key={dept.departamento} value={dept.departamento}>
+                      {dept.departamento}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="city" className="block text-sm font-medium text-gray-300">
+                  Ciudad
+                </label>
+                <select
+                  id="city"
+                  value={selectedCity}
+                  onChange={handleCityChange}
+                  disabled={!selectedDepartment}
+                  className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm disabled:opacity-50"
+                >
+                  <option value="">Selecciona una ciudad</option>
+                  {availableCities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="addressLine" className="block text-sm font-medium text-gray-300">
+                  Dirección exacta
+                </label>
+                <input
+                  type="text"
+                  id="addressLine"
+                  name="addressLine"
+                  value={addressLine}
+                  onChange={(e) => setAddressLine(e.target.value)}
+                  placeholder="Ej: Carrera 12 # 34-56, Apt 201"
+                  required={shippingMethod === "shipping"}
+                  className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
+                />
+              </div>
+            </div>
+          )}
+
+          {shippingMethod === "pickup" && (
+            <p className="text-sm text-cyan-300/80 italic text-center">
+              Coordinaremos la entrega contigo vía WhatsApp.
+            </p>
+          )}
 
           <div>
             <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300">
@@ -172,24 +303,24 @@ export default function CheckoutForm({ onClose, totalAmount }: CheckoutFormProps
               className="mt-1 block w-full bg-gray-800 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 sm:text-sm"
             />
           </div>
-          
+
           <div className="flex justify-between items-center pt-2">
             <span className="text-xl font-bold">Total: ${totalAmount.toLocaleString()}</span>
             <div className="flex gap-3">
-                <button
+              <button
                 type="button"
                 onClick={onClose}
                 className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
-                >
+              >
                 Cancelar
-                </button>
-                <button
+              </button>
+              <button
                 type="submit"
                 disabled={isLoading}
                 className="px-4 py-2 rounded-lg bg-gradient-to-br from-cyan-300 to-orange-300 text-black font-bold hover:opacity-90 transition"
-                >
+              >
                 {isLoading ? "Procesando..." : "Pagar con Wompi"}
-                </button>
+              </button>
             </div>
           </div>
 
