@@ -53,9 +53,8 @@ export default function HeroSlider() {
       {sortedSlides.map((slide, index) => (
         <div
           key={slide._id}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            index === current ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === current ? "opacity-100" : "opacity-0"
+            }`}
         >
           <Image
             src={slide.image}
@@ -75,7 +74,7 @@ export default function HeroSlider() {
               href="/join"
               className="px-6 py-3 rounded-full text-black font-semibold bg-gradient-to-br from-cyan-300 to-orange-300 hover:opacity-90 transition text-lg"
             >
-              Únete al Club
+              Empieza con un diagnóstico, agendate!
             </Link>
           </div>
         </div>
@@ -85,9 +84,8 @@ export default function HeroSlider() {
         {sortedSlides.map((_, i) => (
           <button
             key={i}
-            className={`h-3 w-3 rounded-full transition ${
-              i === current ? "bg-cyan-300" : "bg-white/40"
-            }`}
+            className={`h-3 w-3 rounded-full transition ${i === current ? "bg-cyan-300" : "bg-white/40"
+              }`}
             onClick={() => setCurrent(i)}
           ></button>
         ))}

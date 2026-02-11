@@ -284,6 +284,7 @@ export default function Navbar() {
             <MobileLink href="/entrenamiento" onClick={closeMobile}>Entrenamiento</MobileLink>
             <MobileLink href="/events" onClick={closeMobile}>Eventos</MobileLink>
             <MobileLink href="/tienda" onClick={closeMobile}>Tienda</MobileLink>
+            <MobileLink href="/join" onClick={closeMobile}>Únete</MobileLink>
           </div>
 
           <div className="my-5 border-t border-gray-800" />
@@ -385,6 +386,7 @@ function NavLinks() {
       <Link href="/entrenamiento" className="text-gray-300 hover:text-cyan-300 transition">Entrenamiento</Link>
       <Link href="/events" className="text-gray-300 hover:text-cyan-300 transition">Eventos</Link>
       <Link href="/tienda" className="text-gray-300 hover:text-cyan-300 transition">Tienda</Link>
+      <Link href="/join" className="text-gray-300 hover:text-cyan-300 transition">Únete</Link>
     </>
   );
 }

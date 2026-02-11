@@ -89,17 +89,62 @@ export default function PublicStoriesPage() {
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className={`px-4 py-2 rounded-lg ${
-                page === i + 1
+              className={`px-4 py-2 rounded-lg ${page === i + 1
                   ? "bg-cyan-300 text-black"
                   : "bg-white/10 text-white"
-              }`}
+                }`}
             >
               {i + 1}
             </button>
           ))}
         </div>
       )}
+      {/* SOBRE TRITÓN */}
+      <section className="py-20 border-t border-white/10 mt-12 text-center">
+        <h2 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-orange-400">
+          SOBRE TRITÓN
+        </h2>
+
+        <p className="text-gray-300 max-w-3xl mx-auto mb-10 text-lg leading-relaxed">
+          Tritón es más que un club deportivo. Somos una comunidad que cree en entrenar bien,
+          disfrutar el proceso y construir resultados sostenibles en el tiempo.
+        </p>
+
+        <div className="bg-[#111] border border-white/5 rounded-2xl p-8 max-w-4xl mx-auto mb-10">
+          <h3 className="text-xl font-semibold text-white mb-6">Nuestro enfoque une:</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="flex flex-col items-center gap-3 group">
+              <div className="p-3 bg-white/5 rounded-full group-hover:bg-cyan-500/10 transition-colors">
+                <span className="text-2xl">🔬</span>
+              </div>
+              <span className="text-gray-200 font-medium">Ciencia</span>
+            </div>
+            <div className="flex flex-col items-center gap-3 group">
+              <div className="p-3 bg-white/5 rounded-full group-hover:bg-cyan-500/10 transition-colors">
+                <span className="text-2xl">💻</span>
+              </div>
+              <span className="text-gray-200 font-medium">Tecnología</span>
+            </div>
+            <div className="flex flex-col items-center gap-3 group">
+              <div className="p-3 bg-white/5 rounded-full group-hover:bg-cyan-500/10 transition-colors">
+                <span className="text-2xl">🏅</span>
+              </div>
+              <span className="text-gray-200 font-medium">Experiencia</span>
+            </div>
+            <div className="flex flex-col items-center gap-3 group">
+              <div className="p-3 bg-white/5 rounded-full group-hover:bg-cyan-500/10 transition-colors">
+                <span className="text-2xl">🤝</span>
+              </div>
+              <span className="text-gray-200 font-medium text-center">Acompañamiento humano</span>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-2xl font-bold text-white">
+          Aquí no entrenas solo. <span className="text-cyan-300">Entrenas con sentido.</span>
+        </p>
+      </section>
+
     </main>
   );
 }

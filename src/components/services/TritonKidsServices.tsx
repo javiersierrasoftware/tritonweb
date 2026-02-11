@@ -26,15 +26,36 @@ const kidsServices = [
 
 const TritonKidsServices = () => {
   return (
-    <section className="text-white">
+    <section className="bg-black text-white py-16">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-orange-300">
-            Triton Kids
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-cyan-400 uppercase mb-6">
+            TRITON KIDS
           </h2>
-          <p className="mt-4 text-lg text-gray-400">
-            El mejor comienzo en el mundo del deporte para los más pequeños.
+
+          <h3 className="text-2xl md:text-3xl font-semibold text-white mb-6">
+            Formamos niños activos, seguros y felices
+          </h3>
+
+          <p className="max-w-3xl mx-auto text-lg text-gray-400 leading-relaxed mb-8">
+            Programa deportivo para niños de 3 a 14 años, enfocado en el desarrollo motor,
+            la confianza y el amor por el movimiento.
           </p>
+
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8 text-sm md:text-base text-gray-300">
+            <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 hover:border-orange-400/50 transition-colors">
+              <span className="text-orange-400">✨</span> Atletismo y actividades lúdicas
+            </div>
+            <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 hover:border-orange-400/50 transition-colors">
+              <span className="text-orange-400">🤸</span> Trabajo de coordinación
+            </div>
+            <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 hover:border-orange-400/50 transition-colors">
+              <span className="text-orange-400">🛡️</span> Ambiente seguro y formativo
+            </div>
+            <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 hover:border-orange-400/50 transition-colors">
+              <span className="text-orange-400">🤝</span> Sin presión competitiva
+            </div>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {kidsServices.map((service, index) => (

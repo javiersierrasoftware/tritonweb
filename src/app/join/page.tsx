@@ -44,9 +44,9 @@ export default function JoinPage() {
         </section>
 
         {/* IMPACTO SOCIAL */}
-        <section className="space-y-6">
+        <section className="space-y-6 text-center">
           <h2 className="text-3xl font-bold">Más que deporte</h2>
-          <p className="text-gray-300 max-w-3xl">
+          <p className="text-gray-300 max-w-3xl mx-auto">
             En TRITON creemos en el poder del deporte para transformar vidas.
             Nuestro club promueve hábitos saludables, integración social y
             espacios de amistad. Buscamos construir comunidad a través del
@@ -57,11 +57,20 @@ export default function JoinPage() {
         {/* PLANES DE SUSCRIPCIÓN */}
         <section className="space-y-10">
           <div className="text-center">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">Planes de Suscripción</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              Elige el plan que mejor se adapte a tus objetivos. Ofrecemos opciones flexibles
-              con pago mensual o anual (con descuento).
-            </p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-8">
+              💳 Planes mensuales, semestrales y anuales
+            </h2>
+            <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-10 text-gray-300 text-lg">
+              <span className="flex items-center gap-2">
+                <span className="text-cyan-400">✔</span> Pago mensual
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="text-cyan-400">✔</span> 10% de descuento pagando 6 meses
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="text-cyan-400">✔</span> 20% de descuento pagando 12 meses
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -69,41 +78,31 @@ export default function JoinPage() {
               {
                 name: "Atletismo",
                 img: "/plans/atletismo.png",
-                monthly: "$90.000 COP",
-                yearly: "$900.000 COP",
-                desc: "Acceso a pista, entrenamientos dirigidos y técnica de carrera.",
+                desc: "Entrenamientos dirigidos y técnica de carrera.",
               },
               {
                 name: "Natación",
                 img: "/plans/natacion.png",
-                monthly: "$110.000 COP",
-                yearly: "$1.100.000 COP",
                 desc: "Clases de técnica, resistencia y aguas abiertas.",
               },
               {
                 name: "Triatlón",
                 img: "/plans/triatlon.png",
-                monthly: "$160.000 COP",
-                yearly: "$1.600.000 COP",
                 desc: "Plan integral: Running, Swimming y Cycling.",
               },
               {
                 name: "TRITON Kids",
                 img: "/plans/kids.png",
-                monthly: "$80.000 COP",
-                yearly: "$800.000 COP",
                 desc: "Formación deportiva divertida para los más pequeños.",
               },
               {
                 name: "Vacacionales",
                 img: "/plans/vacacionales.png",
-                price: "Consultar Tarifas",
                 desc: "Temporadas intensivas de deporte y recreación.",
               },
               {
                 name: "Plan a la Medida",
                 img: "/plans/custom.png",
-                price: "Personalizado",
                 desc: "Entrenamiento 1:1 diseñado específicamente para ti.",
               },
             ].map((plan, i) => (
@@ -129,31 +128,14 @@ export default function JoinPage() {
                 <div className="p-6 flex flex-col flex-grow">
                   <p className="text-gray-400 text-sm mb-6 flex-grow">{plan.desc}</p>
 
-                  <div className="space-y-3 pt-4 border-t border-white/10">
-                    {plan.price ? (
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-cyan-300">{plan.price}</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">Mensual</span>
-                          <span className="text-xl font-bold text-white">{plan.monthly}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 text-sm">Anual</span>
-                          <span className="text-xl font-bold text-orange-300">{plan.yearly}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <Link
-                    href="/register"
-                    className="mt-6 w-full block text-center py-3 rounded-lg bg-white/5 hover:bg-cyan-300 hover:text-black transition font-semibold"
+                  <a
+                    href="https://wa.me/573214457170?text=Hola,%20me%20gustaría%20agendar%20un%20diagnóstico"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-auto w-full block text-center py-3 rounded-lg bg-white/5 hover:bg-cyan-300 hover:text-black transition font-semibold"
                   >
-                    Elegir Plan
-                  </Link>
+                    Agenda tu diagnóstico
+                  </a>
                 </div>
               </div>
             ))}
