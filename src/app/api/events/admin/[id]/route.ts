@@ -17,7 +17,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     await connectDB();
-    const event = await Event.findById(id);
+    const event = await Event.findById(id).lean();
+
 
     if (!event) {
       return NextResponse.json({ ok: false, message: "Evento no encontrado" }, { status: 404 });
@@ -32,9 +33,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ message: "No autorizado" }, { status: 403 });
+    if (!session || (session.user as any)?.role !== "ADMIN") {
+      return NextResponse.json({ ok: false, message: "No autorizado" }, { status: 403 });
     }
+
     await connectDB();
     const { id } = await params;
     if (!isValidObjectId(id)) {
@@ -42,7 +44,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const formData = await req.formData();
+
+    // DEBUG LOG
+    console.log("--- DEBUG PUT FORM DATA START ---");
+    for (const [key, value] of Array.from(formData.entries())) {
+      console.log(`Key: ${key}, Value: ${typeof value === 'object' ? '[File]' : value}`);
+    }
+    console.log("--- DEBUG PUT FORM DATA END ---");
+
     const file = formData.get("image") as File | null;
+
     let imageUrl = formData.get("currentImage") as string || "";
 
     // Si se sube una nueva imagen, procesarla y subirla a Cloudinary
@@ -63,30 +74,67 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       imageUrl = result.secure_url;
     }
 
-    const distances = formData.get("distances") as string;
-    const shirtSizes = formData.get("shirtSizes") as string;
-    const registrationPeriods = formData.get("registrationPeriods") as string;
+    const updatedData: any = {};
 
-    const updatedData = {
-      name: formData.get("name"),
-      description: formData.get("description"),
-      date: new Date(formData.get("date") as string),
-      time: formData.get("time"),
-      location: formData.get("location"),
-      type: formData.get("type"),
-      distance: formData.get("distance"),
-      distances: distances ? distances.split(",").map((d) => d.trim()) : [],
-      minAge: Number(formData.get("minAge")) || undefined,
-      maxAge: Number(formData.get("maxAge")) || undefined,
-      price: formData.get("price"),
-      slotsLeft: Number(formData.get("slotsLeft")) || 0,
-      category: JSON.parse((formData.get("category") as string) || "[]"),
-      shirtSizes: shirtSizes ? JSON.parse(shirtSizes) : [],
-      registrationPeriods: registrationPeriods ? JSON.parse(registrationPeriods) : [],
-      image: imageUrl,
-    };
+    // Campos simples (Strings)
+    const stringFields = ["name", "description", "time", "location", "type", "distance", "price", "maxRegistrationTime"];
+    stringFields.forEach(field => {
+      const val = formData.get(field);
+      if (val !== null) updatedData[field] = val as string;
+    });
 
-    const updatedEvent = await Event.findByIdAndUpdate(id, updatedData, { new: true });
+    // Fechas
+    const dateRawVal = formData.get("date") as string;
+    if (dateRawVal) updatedData.date = new Date(dateRawVal);
+
+    const maxRegDateRawVal = formData.get("maxRegistrationDate") as string;
+    if (maxRegDateRawVal !== null) {
+      if (maxRegDateRawVal.trim() !== "") {
+        updatedData.maxRegistrationDate = new Date(`${maxRegDateRawVal}T00:00:00`);
+      } else {
+        updatedData.maxRegistrationDate = null;
+      }
+    }
+
+    // Números
+    const minAgeRawVal = formData.get("minAge");
+    if (minAgeRawVal !== null) updatedData.minAge = Number(minAgeRawVal);
+
+    const maxAgeRawVal = formData.get("maxAge");
+    if (maxAgeRawVal !== null) updatedData.maxAge = Number(maxAgeRawVal);
+
+    const slotsLeftRawVal = formData.get("slotsLeft");
+    if (slotsLeftRawVal !== null) updatedData.slotsLeft = Number(slotsLeftRawVal);
+
+    // Arrays y Objetos (JSON)
+    const distancesRawVal = formData.get("distances") as string;
+    if (distancesRawVal !== null) {
+      updatedData.distances = distancesRawVal.split(",").map(d => d.trim());
+    }
+
+    const categoryRawVal = formData.get("category") as string;
+    if (categoryRawVal) {
+      try { updatedData.category = JSON.parse(categoryRawVal); } catch (e) { console.error("Error parsing category", e); }
+    }
+
+    const shirtSizesRawVal = formData.get("shirtSizes") as string;
+    if (shirtSizesRawVal) {
+      try { updatedData.shirtSizes = JSON.parse(shirtSizesRawVal); } catch (e) { console.error("Error parsing shirtSizes", e); }
+    }
+
+    const regPeriodsRawVal = formData.get("registrationPeriods") as string;
+    if (regPeriodsRawVal) {
+      try { updatedData.registrationPeriods = JSON.parse(regPeriodsRawVal); } catch (e) { console.error("Error parsing regPeriods", e); }
+    }
+
+
+    if (imageUrl) updatedData.image = imageUrl;
+
+    console.log("LOG API: Procediendo a actualizar evento con:", updatedData);
+
+    const updatedEvent = await Event.findByIdAndUpdate(id, updatedData, { new: true, runValidators: true });
+
+
 
     if (!updatedEvent) {
       return NextResponse.json({ ok: false, message: "No se pudo encontrar el evento para actualizar" }, { status: 404 });
@@ -104,8 +152,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ message: "No autorizado" }, { status: 403 });
+    if (!session || (session.user as any)?.role !== "ADMIN") {
+      return NextResponse.json({ ok: false, message: "No autorizado" }, { status: 403 });
     }
 
     const { id } = await params;
@@ -115,10 +163,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     await connectDB();
-    await Event.findByIdAndDelete(id);
+    const deletedEvent = await Event.findByIdAndDelete(id);
 
-    return NextResponse.json({ ok: true, message: "Evento eliminado" });
+    if (!deletedEvent) {
+      return NextResponse.json({ ok: false, message: "Evento no encontrado o ya eliminado" }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true, message: "Evento eliminado correctamente" });
   } catch (error: any) {
+    console.error("🔥 ERROR DELETE API:", error);
     return NextResponse.json({ ok: false, message: error.message }, { status: 500 });
   }
 }
+

@@ -12,8 +12,14 @@ const StorySchema = new Schema(
       required: [true, "El contenido es obligatorio."],
     },
     author: {
-      type: String, // A futuro podría ser: { type: Schema.Types.ObjectId, ref: 'User' }
+      type: String,
       required: [true, "El autor es obligatorio."],
+    },
+    userTag: {
+      type: String,
+    },
+    category: {
+      type: String,
     },
     image: {
       type: String,
@@ -22,6 +28,7 @@ const StorySchema = new Schema(
       type: Boolean,
       default: false,
     },
+
   },
   {
     timestamps: true, // Agrega createdAt y updatedAt automáticamente

@@ -56,6 +56,23 @@ export default function EventsFeed() {
               return `${h12}:${minutes.toString().padStart(2, "0")} ${ampm}`;
             };
 
+            let isRegistrationClosed = false;
+            if (event.maxRegistrationDate) {
+              const now = new Date();
+              const deadline = new Date(event.maxRegistrationDate);
+
+              if (event.maxRegistrationTime) {
+                const [hours, minutes] = event.maxRegistrationTime.split(":").map(Number);
+                deadline.setUTCHours(hours, minutes, 0, 0);
+              } else {
+                deadline.setUTCHours(23, 59, 59, 999);
+              }
+
+              if (now > deadline) {
+                isRegistrationClosed = true;
+              }
+            }
+
             return (
               <article
                 key={event._id}
@@ -76,10 +93,12 @@ export default function EventsFeed() {
                     <span className="font-semibold">Lugar:</span> {event.location}
                   </p>
 
-                  {/* PRECIO: Fix undefined display */}
-                  {event.price !== undefined && event.price !== null && (
+                  {/* PRECIO */}
+                  {event.price && (
                     <p className="text-lg font-bold text-white">
-                      {event.price === 0 ? "Gratis" : `$${event.price.toLocaleString('es-CO')}`}
+                      {event.price === "0" || event.price.toLowerCase() === "gratis"
+                        ? "Gratis"
+                        : event.price}
                     </p>
                   )}
                 </div>
@@ -87,9 +106,15 @@ export default function EventsFeed() {
                   <Link href={`/events/${event._id}`} className="text-cyan-400 hover:underline text-sm">
                     Ver detalles
                   </Link>
-                  <Link href={`/events/register/${event._id}`} className="bg-gradient-to-br from-cyan-300 to-orange-300 text-black px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90">
-                    Inscribirme
-                  </Link>
+                  {isRegistrationClosed ? (
+                    <span className="bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-md text-sm font-semibold">
+                      Cerrado
+                    </span>
+                  ) : (
+                    <Link href={`/events/register/${event._id}`} className="bg-gradient-to-br from-cyan-300 to-orange-300 text-black px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition shadow-md">
+                      Inscribirme
+                    </Link>
+                  )}
                 </div>
               </article>
             );

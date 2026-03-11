@@ -55,18 +55,28 @@ export default function ManageStories() {
 
   // 👉 Marcar / desmarcar destacada
   const toggleFeatured = async (story: any) => {
-    await fetch(`/api/stories/${story._id}/featured`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ featured: !story.featured }),
-    });
+    try {
+      const res = await fetch(`/api/stories/${story._id}/featured`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ featured: !story.featured }),
+      });
 
-    setStories((prev) =>
-      prev.map((s) =>
-        s._id === story._id ? { ...s, featured: !s.featured } : s
-      )
-    );
+      if (!res.ok) {
+        throw new Error("No se pudo actualizar el estado de destacada.");
+      }
+
+      setStories((prev) =>
+        prev.map((s) =>
+          s._id === story._id ? { ...s, featured: !s.featured } : s
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Error al actualizar la historia.");
+    }
   };
+
 
   // 👉 Eliminar múltiples
   const deleteSelected = async () => {
@@ -145,28 +155,35 @@ export default function ManageStories() {
           >
             {/* Checkbox */}
             <button
-              className="absolute top-2 left-2 z-10"
+              className="absolute top-3 left-3 z-10 p-2 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 hover:bg-black/60 transition"
               onClick={() => toggleSelect(post._id)}
             >
               {selected.includes(post._id) ? (
-                <CheckSquare size={22} className="text-cyan-300" />
+                <CheckSquare size={20} className="text-cyan-300" />
               ) : (
-                <Square size={22} className="text-gray-400" />
+                <Square size={20} className="text-gray-300" />
               )}
             </button>
 
             {/* Acciones */}
-            <div className="absolute top-2 right-2 flex gap-2 z-10">
+            <div className="absolute top-3 right-3 flex gap-2 z-10">
               {/* Editar */}
-              <Link href={`/stories/edit/${post._id}`}>
-                <Pencil size={18} className="text-white hover:text-cyan-300" />
+              <Link
+                href={`/stories/edit/${post._id}`}
+                className="p-2 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 hover:bg-black/60 transition"
+              >
+                <Pencil size={18} className="text-white" />
               </Link>
 
               {/* Eliminar */}
-              <button onClick={() => setConfirmDeleteId(post._id)}>
-                <Trash2 size={18} className="text-red-400 hover:text-red-300" />
+              <button
+                onClick={() => setConfirmDeleteId(post._id)}
+                className="p-2 bg-black/40 backdrop-blur-md rounded-lg border border-white/10 hover:bg-red-500/80 transition"
+              >
+                <Trash2 size={18} className="text-red-400 group-hover:text-white" />
               </button>
             </div>
+
 
             {/* Destacar */}
             <button
@@ -214,11 +231,10 @@ export default function ManageStories() {
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className={`px-3 py-1 rounded-lg ${
-                page === i + 1
-                  ? "bg-cyan-300 text-black"
-                  : "bg-white/10 text-white"
-              }`}
+              className={`px-3 py-1 rounded-lg ${page === i + 1
+                ? "bg-cyan-300 text-black"
+                : "bg-white/10 text-white"
+                }`}
             >
               {i + 1}
             </button>

@@ -8,9 +8,12 @@ interface RegistrationButtonProps {
   eventId: string;
   eventDistance?: string;
   isLoggedIn: boolean;
+  isClosed?: boolean;
 }
 
-export default function RegistrationButton({ eventId, eventDistance, isLoggedIn }: RegistrationButtonProps) {
+
+export default function RegistrationButton({ eventId, eventDistance, isLoggedIn, isClosed }: RegistrationButtonProps) {
+
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +39,9 @@ export default function RegistrationButton({ eventId, eventDistance, isLoggedIn 
 
       // Si la respuesta es OK, el servidor ha redirigido o enviado una URL
       const data = await response.json();
-      
+
       if (data.redirectUrl) {
-         window.location.href = data.redirectUrl;
+        window.location.href = data.redirectUrl;
       } else {
         setIsRegistered(true);
       }
@@ -56,7 +59,16 @@ export default function RegistrationButton({ eventId, eventDistance, isLoggedIn 
     router.push(`/events/register/${eventId}`);
   };
 
+  if (isClosed) {
+    return (
+      <div className="flex items-center justify-center gap-2 w-full bg-red-500/10 text-red-400 font-semibold px-4 py-3 rounded-xl border border-red-500/30">
+        <span>Inscripciones cerradas</span>
+      </div>
+    );
+  }
+
   if (isRegistered) {
+
     return (
       <div className="flex items-center justify-center gap-2 w-full bg-green-500/10 text-green-400 font-semibold px-4 py-3 rounded-xl border border-green-500/30">
         <CheckCircle size={20} />

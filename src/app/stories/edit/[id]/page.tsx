@@ -7,6 +7,8 @@ import AdminAuthGuard from "@/components/auth/AdminAuthGuard";
 interface FormState {
   title: string;
   author: string;
+  userTag: string;
+  category: string;
   content: string;
   image: string;
 }
@@ -14,9 +16,12 @@ interface FormState {
 const INITIAL_STATE: FormState = {
   title: "",
   author: "",
+  userTag: "",
+  category: "",
   content: "",
   image: "",
 };
+
 
 function EditStoryPageContent() {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
@@ -46,9 +51,12 @@ function EditStoryPageContent() {
         setForm({
           title: story.title || "",
           author: story.author || "",
+          userTag: story.userTag || "",
+          category: story.category || "",
           content: story.content || "",
           image: story.image || "",
         });
+
       } catch (err: any) {
         setErrorMsg(err.message);
       } finally {
@@ -83,8 +91,11 @@ function EditStoryPageContent() {
       const formData = new FormData();
       formData.append("title", form.title);
       formData.append("author", form.author);
+      formData.append("userTag", form.userTag);
+      formData.append("category", form.category);
       formData.append("content", form.content);
       formData.append("currentImage", form.image);
+
 
       if (imageFile) {
         formData.append("image", imageFile);
@@ -138,7 +149,18 @@ function EditStoryPageContent() {
           </div>
 
           <div>
+            <label className="text-sm text-gray-300">Usuario Tag (sin @)</label>
+            <input type="text" name="userTag" value={form.userTag} onChange={handleChange} className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm" placeholder="ej: javier_run" />
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-300">Categoría</label>
+            <input type="text" name="category" value={form.category} onChange={handleChange} className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm" placeholder="ej: Running, Triatlón..." />
+          </div>
+
+          <div>
             <label className="text-sm text-gray-300">Contenido</label>
+
             <textarea name="content" value={form.content} onChange={handleChange} rows={5} className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm resize-none" required />
           </div>
 
@@ -168,9 +190,9 @@ function EditStoryPageContent() {
 }
 
 export default function EditStoryPage() {
-    return (
-        <AdminAuthGuard>
-            <EditStoryPageContent />
-        </AdminAuthGuard>
-    )
+  return (
+    <AdminAuthGuard>
+      <EditStoryPageContent />
+    </AdminAuthGuard>
+  )
 }

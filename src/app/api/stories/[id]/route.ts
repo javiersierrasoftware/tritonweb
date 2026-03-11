@@ -91,8 +91,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       title: formData.get("title"),
       author: formData.get("author"),
       content: formData.get("content"),
+      userTag: formData.get("userTag"),
+      category: formData.get("category"),
       image: imageUrl,
     };
+
 
     const updatedStory = await Story.findByIdAndUpdate(id, updatedData, { new: true });
 

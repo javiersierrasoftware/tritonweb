@@ -32,7 +32,11 @@ export default function ManageEvents() {
   // Eliminar un evento
   const deleteOne = async (id: string) => {
     try {
-      const res = await fetch(`/api/events/admin/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/events/admin/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+
       if (!res.ok) throw new Error("No se pudo eliminar el evento.");
 
       setEvents((prev) => prev.filter((e) => e._id !== id));
@@ -87,17 +91,31 @@ export default function ManageEvents() {
             className="relative bg-[#111] border border-white/5 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition"
           >
             {/* Acciones */}
-            <div className="absolute top-2 right-2 flex gap-2 z-10 bg-black/50 p-1 rounded-lg">
-              <Link href={`/admin/events/${event._id}/registrations`} title="Ver Inscripciones">
-                <Users size={18} className="text-white hover:text-purple-300" />
+            <div className="absolute top-3 right-3 flex gap-2 z-10">
+              <Link
+                href={`/admin/events/${event._id}/registrations`}
+                title="Ver Inscripciones"
+                className="p-2.5 bg-black rounded-lg border border-white/20 hover:bg-white/10 transition shadow-lg"
+              >
+                <Users size={20} className="text-cyan-400" />
               </Link>
-              <Link href={`/events/edit/${event._id}`} title="Editar Evento">
-                <Pencil size={18} className="text-white hover:text-cyan-300" />
+              <Link
+                href={`/events/edit/${event._id}`}
+                title="Editar Evento"
+                className="p-2.5 bg-black rounded-lg border border-white/20 hover:bg-white/10 transition shadow-lg"
+              >
+                <Pencil size={20} className="text-orange-400" />
               </Link>
-              <button onClick={() => setConfirmDeleteId(event._id)} title="Eliminar Evento">
-                <Trash2 size={18} className="text-red-400 hover:text-red-300" />
+              <button
+                onClick={() => setConfirmDeleteId(event._id)}
+                title="Eliminar Evento"
+                className="p-2.5 bg-black rounded-lg border border-white/20 hover:bg-red-500/20 transition shadow-lg"
+              >
+                <Trash2 size={20} className="text-red-500" />
               </button>
             </div>
+
+
 
             <div className="relative w-full h-48 bg-black rounded-t-xl overflow-hidden">
               <Image

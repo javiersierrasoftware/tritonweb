@@ -97,7 +97,26 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   // Si el usuario quiere forzar triton-tri.com en local, debería configurar NEXT_PUBLIC_BASE_URL.
   // Pero para despliegue automático, la detección por headers es lo más robusto si la var no está.
 
+  /* ------------------- VERIFICAR CIERRE DE INSCRIPCIONES ------------------- */
+  let isRegistrationClosed = false;
+  if (event.maxRegistrationDate) {
+    const now = new Date();
+    const deadline = new Date(event.maxRegistrationDate);
+
+    if (event.maxRegistrationTime) {
+      const [hours, minutes] = event.maxRegistrationTime.split(":").map(Number);
+      deadline.setUTCHours(hours, minutes, 0, 0);
+    } else {
+      deadline.setUTCHours(23, 59, 59, 999);
+    }
+
+    if (now > deadline) {
+      isRegistrationClosed = true;
+    }
+  }
+
   return (
+
     <main className="pb-20">
       {/* Banner */}
       <div className="relative w-full h-[50vh] bg-black">
@@ -143,7 +162,13 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
 
         {/* Columna lateral */}
         <aside className="space-y-6 bg-[#111] border border-white/10 rounded-2xl p-6 h-fit">
-          <RegistrationButton eventId={event._id.toString()} eventDistance={event.distance} isLoggedIn={isLoggedIn} />
+          <RegistrationButton
+            eventId={event._id.toString()}
+            eventDistance={event.distance}
+            isLoggedIn={isLoggedIn}
+            isClosed={isRegistrationClosed}
+          />
+
 
           <div className="flex flex-col items-center justify-center gap-2 pt-4 border-t border-white/10">
             <h3 className="text-lg font-semibold text-white">Inscríbete escaneando</h3>
@@ -170,16 +195,17 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           </div>
 
           {/* PRECIO: Mostrar Gratis si es 0, ocultar si undefined/null */}
-          {event.price !== undefined && event.price !== null && (
+          {event.price && (
             <div className="flex items-center gap-4">
               <Tag className="text-cyan-300" size={24} />
               <p className="font-semibold text-white">
-                {event.price === 0
+                {event.price === "0" || event.price.toLowerCase() === "gratis"
                   ? "Gratis"
-                  : `$${event.price.toLocaleString("es-CO")}`}
+                  : event.price}
               </p>
             </div>
           )}
+
 
           {event.slotsLeft > 0 && (
             <div className="flex items-center gap-4">

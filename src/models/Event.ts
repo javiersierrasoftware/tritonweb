@@ -4,8 +4,9 @@ const RegistrationPeriodSchema = new Schema({
   label: { type: String, required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
-  price: { type: Number },
+  price: { type: String }, // Cambiado a String para admitir texto formateado
 });
+
 
 const EventSchema = new Schema(
   {
@@ -28,6 +29,13 @@ const EventSchema = new Schema(
       type: Date,
       required: [true, "La fecha es obligatoria."],
     },
+    maxRegistrationDate: {
+      type: Date,
+    },
+    maxRegistrationTime: {
+      type: String,
+    },
+
     time: {
       type: String,
       required: [true, "La hora es obligatoria."],
@@ -66,8 +74,9 @@ const EventSchema = new Schema(
       default: [],
     },
     price: {
-      type: Number,
+      type: String, // Cambiado a String para admitir texto formateado
     },
+
     slotsLeft: {
       type: Number,
       default: 0,

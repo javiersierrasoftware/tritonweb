@@ -27,6 +27,9 @@ interface FormState {
   price: string;
   slotsLeft: string;
   image: string;
+  maxRegistrationDate: string;
+  maxRegistrationTime: string;
+
 
   reg1Start: string;
   reg1End: string;
@@ -56,6 +59,9 @@ const INITIAL_STATE: FormState = {
   price: "",
   slotsLeft: "",
   image: "",
+  maxRegistrationDate: "",
+  maxRegistrationTime: "",
+
 
   reg1Start: "",
   reg1End: "",
@@ -182,6 +188,9 @@ function CreateEventAdminPageContent() {
       formData.append("category", JSON.stringify(form.category));
       formData.append("shirtSizes", JSON.stringify(form.shirtSizes));
       formData.append("registrationPeriods", JSON.stringify(registrationPeriods));
+      formData.append("maxRegistrationDate", form.maxRegistrationDate);
+      formData.append("maxRegistrationTime", form.maxRegistrationTime);
+
 
       if (imageFile) {
         formData.append("image", imageFile);
@@ -294,6 +303,29 @@ function CreateEventAdminPageContent() {
                   required
                 />
               </div>
+
+              <div>
+                <label className="text-sm text-gray-300">Fecha límite de inscripción</label>
+                <input
+                  type="date"
+                  name="maxRegistrationDate"
+                  value={form.maxRegistrationDate}
+                  onChange={handleChange}
+                  className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-300">Hora límite de inscripción</label>
+                <input
+                  type="time"
+                  name="maxRegistrationTime"
+                  value={form.maxRegistrationTime}
+                  onChange={handleChange}
+                  className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+
 
               <div className="md:col-span-2">
                 <label className="text-sm text-gray-300">Lugar / Ciudad</label>

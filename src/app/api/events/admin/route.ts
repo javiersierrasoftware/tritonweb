@@ -11,14 +11,24 @@ export async function POST(req: NextRequest) {
   try {
     // 1. Proteger la ruta para que solo ADMINS puedan crear eventos
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== "ADMIN") {
+    if (!session || (session.user as any)?.role !== "ADMIN") {
       return NextResponse.json({ ok: false, message: "No autorizado." }, { status: 401 });
     }
+
 
     await connectDB();
 
     const formData = await req.formData();
+
+    // DEBUG LOG
+    console.log("--- DEBUG POST FORM DATA START ---");
+    for (const [key, value] of Array.from(formData.entries())) {
+      console.log(`Key: ${key}, Value: ${typeof value === 'object' ? '[File]' : value}`);
+    }
+    console.log("--- DEBUG POST FORM DATA END ---");
+
     const file = formData.get("image") as File | null;
+
 
     let imageUrl = "";
     if (file) {
@@ -38,11 +48,11 @@ export async function POST(req: NextRequest) {
       imageUrl = result.secure_url;
     }
 
-    const distances = formData.get("distances") as string;
-    const shirtSizes = formData.get("shirtSizes") as string;
-    const registrationPeriods = formData.get("registrationPeriods") as string;
-
     const name = formData.get("name") as string;
+
+    if (!name) {
+      return NextResponse.json({ ok: false, message: "El nombre es obligatorio." }, { status: 400 });
+    }
 
     // Función para crear un slug amigable para la URL
     const slugify = (str: string) =>
@@ -56,29 +66,66 @@ export async function POST(req: NextRequest) {
       slug = `${baseSlug}-${counter++}`;
     }
 
-    // 2. Crear y guardar el evento en la base de datos
-    const newEvent = new Event({
-      name: name,
-      slug: slug,
-      description: formData.get("description") as string,
-      date: new Date(formData.get("date") as string),
-      time: formData.get("time") as string,
-      location: formData.get("location") as string,
-      type: formData.get("type") as string,
-      distance: formData.get("distance") as string,
-      distances: distances ? distances.split(",").map((d) => d.trim()) : [],
-      minAge: Number(formData.get("minAge")) || undefined,
-      maxAge: Number(formData.get("maxAge")) || undefined,
-      price: Number(formData.get("price")) || 0,
-      slotsLeft: Number(formData.get("slotsLeft")) || 0,
-      category: JSON.parse((formData.get("category") as string) || "[]"),
-      shirtSizes: shirtSizes ? JSON.parse(shirtSizes) : [],
-      registrationPeriods: registrationPeriods ? JSON.parse(registrationPeriods) : [],
-      image: imageUrl,
+    // 2. Construir objeto de datos del evento (limpio)
+    const eventObj: any = {
+      name,
+      slug,
       createdBy: (session.user as any).id,
+      image: imageUrl,
+    };
+
+    // Mapeo de campos simples
+    const stringFields = ["description", "time", "location", "type", "distance", "price", "maxRegistrationTime"];
+    stringFields.forEach(field => {
+      const val = formData.get(field);
+      if (val !== null) eventObj[field] = val as string;
     });
 
+    // Fechas
+    const dateVal = formData.get("date") as string;
+    if (dateVal) eventObj.date = new Date(dateVal);
+
+    const maxRegDateVal = formData.get("maxRegistrationDate") as string;
+    if (maxRegDateVal !== null && maxRegDateVal.trim() !== "") {
+      eventObj.maxRegistrationDate = new Date(`${maxRegDateVal}T00:00:00`);
+    }
+
+    // Números
+    const minAge = formData.get("minAge");
+    if (minAge !== null) eventObj.minAge = Number(minAge);
+
+    const maxAge = formData.get("maxAge");
+    if (maxAge !== null) eventObj.maxAge = Number(maxAge);
+
+    const slotsLeft = formData.get("slotsLeft");
+    if (slotsLeft !== null) eventObj.slotsLeft = Number(slotsLeft);
+
+    // JSON Fields
+    const distances = formData.get("distances") as string;
+    if (distances !== null) {
+      eventObj.distances = distances.split(",").map((d) => d.trim());
+    }
+
+    const category = formData.get("category") as string;
+    if (category) {
+      try { eventObj.category = JSON.parse(category); } catch (e) { eventObj.category = []; }
+    }
+
+    const shirtSizes = formData.get("shirtSizes") as string;
+    if (shirtSizes) {
+      try { eventObj.shirtSizes = JSON.parse(shirtSizes); } catch (e) { eventObj.shirtSizes = []; }
+    }
+
+    const registrationPeriods = formData.get("registrationPeriods") as string;
+    if (registrationPeriods) {
+      try { eventObj.registrationPeriods = JSON.parse(registrationPeriods); } catch (e) { eventObj.registrationPeriods = []; }
+    }
+
+    console.log("LOG API: Guardando nuevo evento con:", eventObj);
+
+    const newEvent = new Event(eventObj);
     await newEvent.save();
+
 
     return NextResponse.json({ ok: true, data: newEvent }, { status: 201 });
   } catch (error: any) {

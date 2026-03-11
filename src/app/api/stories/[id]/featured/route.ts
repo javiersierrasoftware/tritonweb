@@ -1,39 +1,44 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import Story from "@/models/Story";
+
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = req.headers.get("cookie")?.split("triton_session_token=")[1];
-    if (!token) return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ message: "No autenticado" }, { status: 401 });
+    }
 
-    const secret = process.env.JWT_SECRET!;
-    const user = jwt.verify(token, secret) as any;
-
-    if (user.role !== "ADMIN") {
+    if (session.user.role !== "ADMIN") {
       return NextResponse.json({ message: "Solo ADMIN puede modificar destacadas" }, { status: 403 });
     }
 
-    const connection = await connectDB();
-    const db = connection.db;
-    const stories = db!.collection("stories");
+    await connectDB();
 
     const body = await req.json();
     const { featured } = body;
 
     const { id } = await params;
 
-    await stories.updateOne(
-      { _id: new mongoose.Types.ObjectId(id) },
-      { $set: { featured } }
+    const updatedStory = await Story.findByIdAndUpdate(
+      id,
+      { featured },
+      { new: true }
     );
 
-    return NextResponse.json({ message: "Historia actualizada" }, { status: 200 });
+    if (!updatedStory) {
+      return NextResponse.json({ message: "Historia no encontrada" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Historia actualizada", story: updatedStory }, { status: 200 });
   } catch (error) {
+
     console.error(error);
     return NextResponse.json({ message: "Error interno" }, { status: 500 });
   }

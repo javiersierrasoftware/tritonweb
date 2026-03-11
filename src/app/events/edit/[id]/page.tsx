@@ -19,6 +19,9 @@ interface FormState {
   price: string;
   slotsLeft: string;
   image: string;
+  maxRegistrationDate: string;
+  maxRegistrationTime: string;
+
 
   reg1Start: string;
   reg1End: string;
@@ -48,6 +51,9 @@ const INITIAL_STATE: FormState = {
   price: "",
   slotsLeft: "",
   image: "",
+  maxRegistrationDate: "",
+  maxRegistrationTime: "",
+
   reg1Start: "",
   reg1End: "",
   reg2Start: "",
@@ -89,7 +95,7 @@ export default function EditEventAdminPage() {
         }
 
         const event = result.data;
-        
+
         // Formatear fechas para los inputs de tipo 'date'
         const formatDateForInput = (date: string) => date ? new Date(date).toISOString().split('T')[0] : "";
 
@@ -107,8 +113,12 @@ export default function EditEventAdminPage() {
           price: event.price || "",
           slotsLeft: event.slotsLeft?.toString() || "",
           image: event.image || "",
-          category: event.category || "",
+          category: Array.isArray(event.category) ? event.category : [],
           shirtSizes: event.shirtSizes || [],
+          maxRegistrationDate: event.maxRegistrationDate ? new Date(event.maxRegistrationDate).toISOString().split('T')[0] : "",
+          maxRegistrationTime: event.maxRegistrationTime || "",
+
+
           reg1Start: formatDateForInput(event.registrationPeriods?.[0]?.startDate),
           reg1End: formatDateForInput(event.registrationPeriods?.[0]?.endDate),
           reg2Start: formatDateForInput(event.registrationPeriods?.[1]?.startDate),
@@ -173,16 +183,31 @@ export default function EditEventAdminPage() {
 
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => {
-        if (key !== 'shirtSizes' && key !== 'registrationPeriods' && !key.startsWith('reg') && key !== 'category') {
-          if (value && key !== 'image') { // No incluir la URL de la imagen vieja aquí
+        if (
+          key !== 'shirtSizes' &&
+          key !== 'registrationPeriods' &&
+          !key.startsWith('reg') &&
+          key !== 'category' &&
+          key !== 'maxRegistrationDate' &&
+          key !== 'maxRegistrationTime'
+        ) {
+          if (value !== undefined && value !== null && key !== 'image') {
             formData.append(key, value as string);
           }
         }
       });
-      
+
+      // Asegurar que se envíen estos campos explícitamente, incluso si están vacíos
+      formData.append("maxRegistrationDate", form.maxRegistrationDate || "");
+      formData.append("maxRegistrationTime", form.maxRegistrationTime || "");
+
+
       formData.append("shirtSizes", JSON.stringify(form.shirtSizes));
       formData.append("registrationPeriods", JSON.stringify(registrationPeriods));
       formData.append("category", JSON.stringify(form.category));
+      // formData.append("maxRegistrationDate", form.maxRegistrationDate); // Removed as it's handled explicitly above
+      // formData.append("maxRegistrationTime", form.maxRegistrationTime); // Removed as it's handled explicitly above
+
       formData.append("currentImage", form.image); // Enviamos la URL actual por si no se cambia
 
       if (imageFile) {
@@ -191,8 +216,10 @@ export default function EditEventAdminPage() {
 
       const res = await fetch(`/api/events/admin/${id}`, {
         method: "PUT",
+        credentials: "include",
         body: formData,
       });
+
 
       const data = await res.json();
 
@@ -311,6 +338,29 @@ export default function EditEventAdminPage() {
                 />
               </div>
 
+              <div>
+                <label className="text-sm text-gray-300">Fecha límite de inscripción</label>
+                <input
+                  type="date"
+                  name="maxRegistrationDate"
+                  value={form.maxRegistrationDate}
+                  onChange={handleChange}
+                  className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-gray-300">Hora límite de inscripción</label>
+                <input
+                  type="time"
+                  name="maxRegistrationTime"
+                  value={form.maxRegistrationTime}
+                  onChange={handleChange}
+                  className="w-full mt-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+
+
               <div className="md:col-span-2">
                 <label className="text-sm text-gray-300">Lugar / Ciudad</label>
                 <input
@@ -383,11 +433,10 @@ export default function EditEventAdminPage() {
                         key={cat}
                         type="button"
                         onClick={() => toggleCategory(cat)}
-                        className={`px-3 py-1 rounded-full border text-xs ${
-                          active
-                            ? "bg-cyan-300 text-black border-cyan-300"
-                            : "border-white/20 text-gray-200 bg-white/5"
-                        }`}
+                        className={`px-3 py-1 rounded-full border text-xs ${active
+                          ? "bg-cyan-300 text-black border-cyan-300"
+                          : "border-white/20 text-gray-200 bg-white/5"
+                          }`}
                       >
                         {cat}
                       </button>
@@ -432,11 +481,10 @@ export default function EditEventAdminPage() {
                       key={size}
                       type="button"
                       onClick={() => toggleShirtSize(size)}
-                      className={`px-3 py-1 rounded-full border text-xs ${
-                        active
-                          ? "bg-cyan-300 text-black border-cyan-300"
-                          : "border-white/20 text-gray-200 bg-white/5"
-                      }`}
+                      className={`px-3 py-1 rounded-full border text-xs ${active
+                        ? "bg-cyan-300 text-black border-cyan-300"
+                        : "border-white/20 text-gray-200 bg-white/5"
+                        }`}
                     >
                       {size}
                     </button>

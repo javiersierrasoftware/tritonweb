@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Share2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export default function PublicStoriesPage() {
+
   const [stories, setStories] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -32,6 +35,26 @@ export default function PublicStoriesPage() {
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
+  // Function to handle sharing
+  const handleShare = async (story: any) => {
+    const shareData = {
+      title: `Historia de ${story.author} en TRITON`,
+      text: `${story.author}: "${story.content}"`,
+      url: window.location.origin + "/stories",
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        toast.info("¡Enlace copiado al portapapeles!");
+      }
+    } catch (err) {
+      console.error("Error sharing:", err);
+    }
+  };
+
   return (
     <main className="max-w-6xl mx-auto px-4 pt-28 pb-16 space-y-8">
 
@@ -58,7 +81,7 @@ export default function PublicStoriesPage() {
         {paginated.map((story) => (
           <div
             key={story._id}
-            className="bg-[#111] border border-white/10 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition"
+            className="flex flex-col bg-[#111] border border-white/10 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition"
           >
             {/* Imagen igual al Feed */}
             <div className="relative w-full h-80 bg-black overflow-hidden">
@@ -71,16 +94,27 @@ export default function PublicStoriesPage() {
               />
             </div>
 
-            <div className="p-4 space-y-2">
-              <p className="font-semibold text-white">{story.author}</p>
-              <p className="text-sm text-gray-300 mt-1 line-clamp-3">
-                {story.content}
-              </p>
-              <p className="text-xs text-cyan-300 pt-1">{story.title}</p>
+            <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <p className="font-semibold text-white">{story.author}</p>
+                <p className="text-sm text-gray-300 line-clamp-3">
+                  {story.content}
+                </p>
+                <p className="text-xs text-cyan-300">{story.title}</p>
+              </div>
+
+              {/* Botón Compartir */}
+              <button
+                onClick={() => handleShare(story)}
+                className="flex items-center justify-center gap-2 w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-semibold transition"
+              >
+                <Share2 size={16} /> Compartir
+              </button>
             </div>
           </div>
         ))}
       </div>
+
 
       {/* PAGINACIÓN */}
       {totalPages > 1 && (
@@ -90,8 +124,8 @@ export default function PublicStoriesPage() {
               key={i}
               onClick={() => setPage(i + 1)}
               className={`px-4 py-2 rounded-lg ${page === i + 1
-                  ? "bg-cyan-300 text-black"
-                  : "bg-white/10 text-white"
+                ? "bg-cyan-300 text-black"
+                : "bg-white/10 text-white"
                 }`}
             >
               {i + 1}

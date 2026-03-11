@@ -69,14 +69,14 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     await Story.create({
-      title: `${category} de ${user}`, // Título generado a partir de los datos
+      title: `${category} de ${user}`,
       content: description,
       author: user,
+      userTag: userTag,
+      category: category,
       image: imageUrl,
-      // Los campos userTag y category no están en el modelo Story,
-      // se podrían añadir al Schema si son necesarios.
-      // timestamps: true en el modelo se encarga de createdAt.
     });
+
 
     console.log("✅ Historia guardada correctamente en MongoDB");
 

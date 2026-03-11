@@ -13,9 +13,9 @@ export default function Feed() {
     if (stored) setUser(JSON.parse(stored));
 
     fetch("/api/stories?featured=1")
-  .then((res) => res.json())
-  .then((data) => setStories(data))
-  .catch(console.error);
+      .then((res) => res.json())
+      .then((data) => setStories(data))
+      .catch(console.error);
   }, []);
 
   return (
@@ -37,8 +37,8 @@ export default function Feed() {
         {/* GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {stories.map((post: any) => {
-            const userInitial =
-              post.user?.charAt(0).toUpperCase() ?? "U";
+            const authorName = post.author || post.user || "Usuario TRITON";
+            const userInitial = authorName.charAt(0).toUpperCase();
 
             return (
               <article
@@ -68,28 +68,31 @@ export default function Feed() {
 
                     <div className="flex flex-col leading-tight">
                       <p className="font-semibold text-white text-base">
-                        {post.user}
+                        {authorName}
                       </p>
-                      <span className="text-xs text-gray-400">@{post.userTag}</span>
+                      <span className="text-xs text-gray-400">
+                        @{post.userTag || authorName.toLowerCase().replace(/\s+/g, '')}
+                      </span>
                     </div>
                   </div>
 
                   <span className="px-3 py-1 text-xs rounded-full 
                                    bg-white/10 border border-white/10 
                                    backdrop-blur-sm text-gray-200">
-                    {post.category}
+                    {post.category || "General"}
                   </span>
                 </div>
 
                 {/* DESCRIPTION */}
                 <div className="px-4 pb-4">
                   <p className="text-sm text-gray-300 leading-relaxed">
-                    {post.description}
+                    {post.content || post.description}
                   </p>
                 </div>
               </article>
             );
           })}
+
         </div>
       </div>
     </section>
