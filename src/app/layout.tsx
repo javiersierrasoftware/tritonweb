@@ -6,8 +6,41 @@ import Footer from "@/components/Footer";
 import Providers from "./providers"; // Import the new Providers component
 
 export const metadata: Metadata = {
-  title: "TRITONWEB",
-  description: "Plataforma del Club Deportivo TRITON",
+  title: "TRITON | Club Deportivo - Alto Rendimiento y Entrenamiento",
+  description: "Plataforma oficial del Club Deportivo TRITON. Entrenamiento de alto rendimiento, inscripciones, tienda deportiva y seguimiento de atletas.",
+  keywords: ["TRITON", "Club Deportivo", "Natación", "Entrenamiento", "Alto Rendimiento", "Deporte", "Triton Web", "Inscripciones deportivas", "Club de Natación"],
+  authors: [{ name: "TRITON Club" }],
+  openGraph: {
+    title: "TRITON | Club Deportivo",
+    description: "Únete al Club Deportivo TRITON. Excelencia en natación y entrenamiento deportivo.",
+    url: "https://tritonweb.vercel.app",
+    siteName: "TRITON Club",
+    locale: "es_ES",
+    type: "website",
+    images: [
+      {
+        url: "/tritontransparente.png",
+        width: 800,
+        height: 600,
+        alt: "Logo TRITON Club Deportivo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TRITON | Club Deportivo",
+    description: "Entrenamiento de alto rendimiento y comunidad deportiva.",
+    images: ["/tritontransparente.png"],
+  },
+  icons: {
+    icon: "/tritontransparente.png",
+    shortcut: "/tritontransparente.png",
+    apple: "/tritontransparente.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
